@@ -159,7 +159,8 @@ const PIE_COLORS = ['#7c3aed', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe'];
 
 function fmt(v: number | null | undefined, currency = true) {
   if (v == null) return '—';
-  return currency ? `₹${Number(v).toLocaleString('en-IN')}` : String(v);
+  const rounded = Math.round(Number(v));
+  return currency ? `₹${rounded.toLocaleString('en-IN')}` : String(rounded);
 }
 
 function fmtWhole(v: number | null | undefined) {
@@ -174,7 +175,7 @@ function fmtDate(s: string | null) {
 
 function num(n: string | number | null | undefined) {
   if (n == null || n === '') return '—';
-  return Number(n).toLocaleString('en-IN');
+  return Math.round(Number(n)).toLocaleString('en-IN');
 }
 
 function pct(n: string | number | null | undefined) {
@@ -1017,7 +1018,7 @@ export default function CouponsPage() {
                   appliedAmount = fmt(Number(selected.total_discount_burn));
                   appliedOrderCount = num(selected.usage_count);
                   appliedOrderValue = fmt(Number(selected.total_revenue));
-                  appliedPercentage = `${Number(selected.discount_pct_of_revenue).toFixed(2)}%`;
+                  appliedPercentage = `${Math.round(Number(selected.discount_pct_of_revenue))}%`;
                   avgOrderValue = fmtWhole(Number(selected.avg_order_value));
                 } else if (metrics) {
                   appliedAmount = metrics.total_discount_burn ? fmt(Number(metrics.total_discount_burn)) : '—';
@@ -1063,8 +1064,8 @@ export default function CouponsPage() {
                         {(() => {
                           const appliedAmt = Number(appliedAmount?.replace(/[₹,]/g, '') || 0);
                           const appliedOrders = Number(appliedOrderCount || 0);
-                          const avgAmt = appliedOrders > 0 ? (appliedAmt / appliedOrders).toFixed(2) : '0.00';
-                          return `₹${Number(avgAmt).toLocaleString('en-IN')}`;
+                          const avgAmt = appliedOrders > 0 ? Math.round(appliedAmt / appliedOrders) : 0;
+                          return `₹${avgAmt.toLocaleString('en-IN')}`;
                         })()}
                       </p>
                       <p className="text-xs text-slate-700 mt-1">Per applied order</p>
@@ -1109,10 +1110,10 @@ export default function CouponsPage() {
                     ) : (
                       topCoupons.map((coupon) => {
                         const appliedAmountPct = Number(coupon.total_revenue) > 0
-                          ? ((Number(coupon.total_discount_burn) / Number(coupon.total_revenue)) * 100).toFixed(2)
-                          : '0.00';
+                          ? Math.round((Number(coupon.total_discount_burn) / Number(coupon.total_revenue)) * 100)
+                          : 0;
                         const avgAppliedAmount = Number(coupon.usage_count) > 0
-                          ? Number(coupon.total_discount_burn) / Number(coupon.usage_count)
+                          ? Math.round(Number(coupon.total_discount_burn) / Number(coupon.usage_count))
                           : 0;
                         return (
                           <tr
@@ -1481,7 +1482,7 @@ export default function CouponsPage() {
                     <p className="text-sm font-semibold text-slate-700 mt-2">How much of your daily revenue is being given away as discounts - Track this to optimize profitability</p>
                   </div>
                   <div className="text-right bg-white/60 backdrop-blur rounded-xl p-4 border border-violet-200/60">
-                    <p className="text-4xl font-black bg-gradient-to-r from-cyan-600 to-violet-600 bg-clip-text text-transparent">{trends.length > 0 ? ((trends.reduce((sum, t) => sum + Number(t.discount_burn), 0) / trends.reduce((sum, t) => sum + Number(t.revenue), 0)) * 100).toFixed(2) : 0}%</p>
+                    <p className="text-4xl font-black bg-gradient-to-r from-cyan-600 to-violet-600 bg-clip-text text-transparent">{trends.length > 0 ? Math.round((trends.reduce((sum, t) => sum + Number(t.discount_burn), 0) / trends.reduce((sum, t) => sum + Number(t.revenue), 0)) * 100) : 0}%</p>
                     <p className="text-xs font-bold uppercase tracking-wider text-violet-700 mt-1">Period Average</p>
                   </div>
                 </div>
@@ -1587,12 +1588,12 @@ export default function CouponsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="p-4 bg-white/70 rounded-xl border border-emerald-200">
                             <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">This Week Burn %</p>
-                            <p className="text-2xl font-black text-slate-900 mt-2">{thisWeekPct.toFixed(2)}%</p>
+                            <p className="text-2xl font-black text-slate-900 mt-2">{Math.round(thisWeekPct)}%</p>
                             <p className="text-xs text-slate-600 mt-1">Discount burn rate</p>
                           </div>
                           <div className="p-4 bg-white/70 rounded-xl border border-emerald-200">
                             <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Last Week Burn %</p>
-                            <p className="text-2xl font-black text-slate-900 mt-2">{lastWeekPct.toFixed(2)}%</p>
+                            <p className="text-2xl font-black text-slate-900 mt-2">{Math.round(lastWeekPct)}%</p>
                             <p className="text-xs text-slate-600 mt-1">Previous week rate</p>
                           </div>
                         </div>
@@ -1603,7 +1604,7 @@ export default function CouponsPage() {
                               <p className="text-sm text-slate-700 mt-1">Discount burn rate trend</p>
                             </div>
                             <div className={`text-right ${weekChange < 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              <p className="text-2xl font-black">{weekChange > 0 ? '+' : ''}{weekChange.toFixed(2)}%</p>
+                              <p className="text-2xl font-black">{weekChange > 0 ? '+' : ''}{Math.round(weekChange * 10) / 10}%</p>
                               <p className="text-sm font-bold">{weekChange < 0 ? '↓ Improving' : '↑ Increasing'}</p>
                             </div>
                           </div>
@@ -1659,12 +1660,12 @@ export default function CouponsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="p-4 bg-white/70 rounded-xl border border-blue-200">
                             <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">This Month Burn %</p>
-                            <p className="text-2xl font-black text-slate-900 mt-2">{thisMonthPct.toFixed(2)}%</p>
+                            <p className="text-2xl font-black text-slate-900 mt-2">{Math.round(thisMonthPct)}%</p>
                             <p className="text-xs text-slate-600 mt-1">Current month rate</p>
                           </div>
                           <div className="p-4 bg-white/70 rounded-xl border border-blue-200">
                             <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Last Month Burn %</p>
-                            <p className="text-2xl font-black text-slate-900 mt-2">{lastMonthPct.toFixed(2)}%</p>
+                            <p className="text-2xl font-black text-slate-900 mt-2">{Math.round(lastMonthPct)}%</p>
                             <p className="text-xs text-slate-600 mt-1">Previous month rate</p>
                           </div>
                         </div>
@@ -1675,7 +1676,7 @@ export default function CouponsPage() {
                               <p className="text-sm text-slate-700 mt-1">Discount burn rate trend</p>
                             </div>
                             <div className={`text-right ${monthChange < 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              <p className="text-2xl font-black">{monthChange > 0 ? '+' : ''}{monthChange.toFixed(2)}%</p>
+                              <p className="text-2xl font-black">{monthChange > 0 ? '+' : ''}{Math.round(monthChange * 10) / 10}%</p>
                               <p className="text-sm font-bold">{monthChange < 0 ? '↓ Improving' : '↑ Increasing'}</p>
                             </div>
                           </div>
