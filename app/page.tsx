@@ -1002,7 +1002,7 @@ export default function CouponsPage() {
             </div>
 
             {/* Metrics Cards */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-6 gap-3">
               {(() => {
                 const selected = selectedDashboardCode
                   ? topCoupons.find(c => c.code === selectedDashboardCode)
@@ -1033,32 +1033,32 @@ export default function CouponsPage() {
 
                 return (
                   <>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">Applied Amount</p>
                       <p className="text-2xl font-black text-slate-900">{appliedAmount}</p>
                       <p className="text-xs text-slate-700 mt-0.5">Total discount burn</p>
                     </div>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">Applied Orders</p>
                       <p className="text-2xl font-black text-slate-900">{appliedOrderCount}</p>
                       <p className="text-xs text-slate-700 mt-0.5">Order count</p>
                     </div>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">Order Value</p>
                       <p className="text-2xl font-black text-slate-900">{appliedOrderValue}</p>
                       <p className="text-xs text-slate-700 mt-0.5">Total revenue</p>
                     </div>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">Avg Order Value</p>
                       <p className="text-2xl font-black text-slate-900">{avgOrderValue}</p>
                       <p className="text-xs text-slate-700 mt-0.5">Per order</p>
                     </div>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">% Applied</p>
                       <p className="text-2xl font-black text-slate-900">{appliedPercentage}</p>
                       <p className="text-xs text-slate-700 mt-0.5">Percentage</p>
                     </div>
-                    <div className="khilna-card p-3 rounded-xl bg-white border border-purple-200">
+                    <div className="khilna-card p-2 rounded-xl bg-white border border-purple-200">
                       <p className="text-xs text-slate-700 font-semibold uppercase mb-1">Avg Applied Amount</p>
                       <p className="text-2xl font-black text-slate-900">
                         {(() => {
