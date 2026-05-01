@@ -410,6 +410,8 @@ table td {
 
 .khilna-card:hover {
   animation: khilne-bloom 0.25s ease-in-out forwards;
+  background-color: rgba(237, 233, 254, 0.8) !important;
+  border-color: rgba(196, 181, 253, 0.6);
 }
 
 /* Khilna Row - Table row with subtle hover effect */
