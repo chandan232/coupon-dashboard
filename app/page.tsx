@@ -1487,91 +1487,98 @@ export default function CouponsPage() {
 
             {/* Buyer & Order Coupon Trends */}
             {buyerCouponTrends.length > 0 && (
-              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald-50/70 via-teal-50/50 to-green-50/70 border border-emerald-200/60 shadow-xl shadow-emerald-300/20 backdrop-blur-sm overflow-hidden">
+              <div className="relative p-8 rounded-2xl bg-gradient-to-br from-emerald-50/70 via-teal-50/50 to-green-50/70 border border-emerald-200/60 shadow-xl shadow-emerald-300/20 backdrop-blur-sm overflow-hidden">
                 <div className="absolute -top-12 -right-12 w-40 h-40 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex items-center justify-between mb-4 relative">
+                <div className="flex items-center justify-between mb-8 relative">
                   <div>
-                    <h3 className="text-xl font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">👥 Buyers & Orders with Coupons Trend</h3>
-                    <p className="text-xs font-medium text-slate-700 mt-1">Daily trend of unique buyers and orders with applied coupons</p>
+                    <h3 className="text-2xl font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">👥 Buyers & Orders with Coupons Trend</h3>
+                    <p className="text-sm font-semibold text-slate-700 mt-2">Daily trend showing unique buyers and orders with applied coupons</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{buyerCouponTrends.reduce((sum, t) => sum + Number(t.unique_buyers_applied_coupons || 0), 0).toLocaleString('en-IN')}</p>
-                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Total Buyers</p>
+                  <div className="text-right bg-white/70 backdrop-blur rounded-xl p-4 border border-emerald-200/60 shadow-lg">
+                    <p className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{buyerCouponTrends.reduce((sum, t) => sum + Number(t.unique_buyers_applied_coupons || 0), 0).toLocaleString('en-IN')}</p>
+                    <p className="text-sm font-bold uppercase tracking-wider text-emerald-700 mt-1">Total Buyers</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={380}>
+                <ResponsiveContainer width="100%" height={500}>
                   <ComposedChart data={[...buyerCouponTrends].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(t => ({
                     ...t,
                     displayDate: new Date(t.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
                     orders: Number(t.orders_with_coupons),
                     buyers: Number(t.unique_buyers_applied_coupons)
-                  }))}>
+                  }))} margin={{ top: 30, right: 80, left: 80, bottom: 60 }}>
                     <defs>
                       <linearGradient id="colorBuyers" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.95}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
+                        <stop offset="5%" stopColor="#059669" stopOpacity={1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.3}/>
                       </linearGradient>
                       <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.95}/>
-                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.2}/>
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={1}/>
+                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.3}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" strokeWidth={1.5} />
                     <XAxis
                       dataKey="displayDate"
-                      stroke="#10b981"
-                      style={{ fontSize: '12px', fontWeight: 600 }}
+                      stroke="#059669"
+                      style={{ fontSize: '14px', fontWeight: 700 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
                     />
                     <YAxis
-                      stroke="#10b981"
-                      style={{ fontSize: '12px', fontWeight: 600 }}
-                      label={{ value: 'Unique Buyers', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: '12px', fontWeight: 'bold', fill: '#10b981' } }}
+                      stroke="#059669"
+                      style={{ fontSize: '14px', fontWeight: 700 }}
+                      label={{ value: '👥 Unique Buyers', angle: -90, position: 'insideLeft', offset: -10, style: { fontSize: '14px', fontWeight: 'bold', fill: '#059669' } }}
                     />
                     <YAxis
                       yAxisId="right"
-                      stroke="#14b8a6"
-                      style={{ fontSize: '12px', fontWeight: 600 }}
-                      label={{ value: 'Orders with Coupons', angle: 90, position: 'insideRight', offset: 10, style: { fontSize: '12px', fontWeight: 'bold', fill: '#14b8a6' } }}
+                      stroke="#0d9488"
+                      style={{ fontSize: '14px', fontWeight: 700 }}
+                      label={{ value: '📦 Orders', angle: 90, position: 'insideRight', offset: -10, style: { fontSize: '14px', fontWeight: 'bold', fill: '#0d9488' } }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                        border: '2px solid #10b981',
-                        borderRadius: '14px',
-                        padding: '16px',
-                        boxShadow: '0 20px 40px rgba(16, 185, 129, 0.25)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.99)',
+                        border: '3px solid #059669',
+                        borderRadius: '16px',
+                        padding: '20px',
+                        boxShadow: '0 25px 50px rgba(16, 185, 129, 0.35)',
                       }}
+                      labelStyle={{ color: '#059669', fontSize: '14px', fontWeight: 'bold' }}
                       formatter={(value: any, name: any) => {
-                        if (name === '👥 Unique Buyers') return [num(value), '👥 Unique Buyers'];
-                        if (name === '📦 Orders') return [num(value), '📦 Orders'];
-                        return [num(value), name];
+                        const formattedValue = num(value);
+                        if (name === '👥 Unique Buyers') return [formattedValue, '👥 Unique Buyers'];
+                        if (name === '📦 Orders') return [formattedValue, '📦 Orders'];
+                        return [formattedValue, name];
                       }}
                     />
                     <Legend
-                      wrapperStyle={{ paddingTop: '20px' }}
-                      height={30}
+                      wrapperStyle={{ paddingTop: '30px' }}
+                      height={40}
+                      iconType="rect"
+                      textStyle={{ fontSize: '14px', fontWeight: 'bold', color: '#1f2937' }}
                     />
                     <Bar
                       dataKey="buyers"
                       fill="url(#colorBuyers)"
                       name="👥 Unique Buyers"
-                      radius={[8, 8, 0, 0]}
-                      stroke="#10b981"
-                      strokeWidth={1}
+                      radius={[12, 12, 0, 0]}
+                      stroke="#059669"
+                      strokeWidth={2}
                     >
-                      <LabelList dataKey="buyers" position="top" fill="#10b981" fontSize={12} fontWeight="bold" />
+                      <LabelList dataKey="buyers" position="top" fill="#059669" fontSize={14} fontWeight="bold" offset={8} />
                     </Bar>
                     <Bar
                       yAxisId="right"
                       dataKey="orders"
                       fill="url(#colorOrders)"
                       name="📦 Orders"
-                      radius={[8, 8, 0, 0]}
-                      stroke="#14b8a6"
-                      strokeWidth={1}
+                      radius={[12, 12, 0, 0]}
+                      stroke="#0d9488"
+                      strokeWidth={2}
                     >
-                      <LabelList dataKey="orders" position="top" fill="#14b8a6" fontSize={12} fontWeight="bold" />
+                      <LabelList dataKey="orders" position="top" fill="#0d9488" fontSize={14} fontWeight="bold" offset={8} />
                     </Bar>
                   </ComposedChart>
                 </ResponsiveContainer>
