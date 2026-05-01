@@ -1057,6 +1057,18 @@ export default function CouponsPage() {
                       <p className="text-2xl font-black text-slate-900">{appliedPercentage}</p>
                       <p className="text-xs text-slate-700 mt-1">Percentage</p>
                     </div>
+                    <div className="khilna-card p-4 rounded-xl bg-white border border-purple-200">
+                      <p className="text-xs text-slate-700 font-semibold uppercase mb-2">Avg Applied Amount</p>
+                      <p className="text-2xl font-black text-slate-900">
+                        {(() => {
+                          const appliedAmt = Number(appliedAmount?.replace(/[₹,]/g, '') || 0);
+                          const appliedOrders = Number(appliedOrderCount || 0);
+                          const avgAmt = appliedOrders > 0 ? (appliedAmt / appliedOrders).toFixed(2) : '0.00';
+                          return `₹${Number(avgAmt).toLocaleString('en-IN')}`;
+                        })()}
+                      </p>
+                      <p className="text-xs text-slate-700 mt-1">Per applied order</p>
+                    </div>
                   </>
                 );
               })()}
