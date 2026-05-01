@@ -1118,7 +1118,15 @@ export default function CouponsPage() {
                         return (
                           <tr
                             key={coupon.code}
-                            className={`khilna-row cursor-pointer hover:bg-purple-100 transition-colors ${selectedDashboardCode === coupon.code ? 'bg-purple-100/80 border-l-4 border-purple-600' : 'bg-purple-50/30'}`}
+                            className={`khilna-row cursor-pointer transition-colors ${
+                              selectedDashboardCode === coupon.code
+                                ? 'bg-purple-200/80 border-l-4 border-purple-600'
+                                : appliedAmountPct >= 15
+                                  ? 'bg-red-100/60 hover:bg-red-200/60'
+                                  : appliedAmountPct >= 10
+                                  ? 'bg-yellow-100/60 hover:bg-yellow-200/60'
+                                  : 'bg-green-100/60 hover:bg-green-200/60'
+                            }`}
                             onClick={() => setSelectedDashboardCode(coupon.code)}
                           >
                             <td className="px-4 py-3 text-center font-mono font-bold text-slate-900 hover:underline">{coupon.code}</td>
