@@ -1297,32 +1297,34 @@ export default function CouponsPage() {
                   }))}>
                     <defs>
                       <linearGradient id="colorCouponDriven" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.95}/>
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.15}/>
+                        <stop offset="0%" stopColor="#ec4899" stopOpacity={1}/>
+                        <stop offset="50%" stopColor="#d946ef" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#a855f7" stopOpacity={0.2}/>
                       </linearGradient>
                       <linearGradient id="colorNoCoupon" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.95}/>
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.15}/>
+                        <stop offset="0%" stopColor="#0ea5e9" stopOpacity={1}/>
+                        <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#0891b2" stopOpacity={0.2}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ddd6fe" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" strokeWidth={1.5} />
                     <XAxis
                       dataKey="date"
-                      stroke="#7c3aed"
+                      stroke="#6366f1"
                       style={{ fontSize: '12px', fontWeight: 600 }}
                     />
                     <YAxis
-                      stroke="#7c3aed"
+                      stroke="#6366f1"
                       style={{ fontSize: '12px', fontWeight: 600 }}
-                      label={{ value: 'Order Count', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: '12px', fontWeight: 'bold', fill: '#7c3aed' } }}
+                      label={{ value: 'Order Count', angle: -90, position: 'insideLeft', offset: 10, style: { fontSize: '12px', fontWeight: 'bold', fill: '#6366f1' } }}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                        border: '2px solid #8b5cf6',
-                        borderRadius: '14px',
+                        border: '3px solid #ec4899',
+                        borderRadius: '16px',
                         padding: '16px',
-                        boxShadow: '0 20px 40px rgba(236, 72, 153, 0.25)',
+                        boxShadow: '0 25px 50px rgba(236, 72, 153, 0.40)',
                       }}
                       formatter={(value: any, name: any) => {
                         if (name === '💳 Coupon Driven') return [num(value), '💳 Coupon Driven'];
@@ -1339,30 +1341,30 @@ export default function CouponsPage() {
                       fill="url(#colorCouponDriven)"
                       name="💳 Coupon Driven"
                       radius={[10, 10, 0, 0]}
-                      stroke="#8b5cf6"
-                      strokeWidth={1}
+                      stroke="#ec4899"
+                      strokeWidth={2}
                     >
-                      <LabelList dataKey="coupon_driven_orders" position="top" fill="#7c3aed" fontSize={12} fontWeight="bold" />
+                      <LabelList dataKey="coupon_driven_orders" position="top" fill="#ec4899" fontSize={12} fontWeight="bold" />
                     </Bar>
                     <Bar
                       dataKey="no_coupon_orders"
                       fill="url(#colorNoCoupon)"
                       name="🔌 No Coupon"
                       radius={[10, 10, 0, 0]}
-                      stroke="#06b6d4"
-                      strokeWidth={1}
+                      stroke="#0ea5e9"
+                      strokeWidth={2}
                     >
-                      <LabelList dataKey="no_coupon_orders" position="top" fill="#0e7490" fontSize={12} fontWeight="bold" />
+                      <LabelList dataKey="no_coupon_orders" position="top" fill="#0ea5e9" fontSize={12} fontWeight="bold" />
                     </Bar>
                     <Line
                       type="monotone"
                       dataKey="total_orders"
-                      stroke="#f59e0b"
+                      stroke="#ff6b35"
                       strokeWidth={3.5}
                       name="📊 Total Orders"
-                      dot={{ fill: '#f59e0b', r: 6, strokeWidth: 2, stroke: '#fff' }}
-                      activeDot={{ r: 9, fill: '#f59e0b', stroke: '#fff', strokeWidth: 3 }}
-                      label={{ position: 'top', fill: '#b45309', fontSize: 11, fontWeight: 'bold', offset: 12 }}
+                      dot={{ fill: '#ff6b35', r: 6, strokeWidth: 2, stroke: '#fff' }}
+                      activeDot={{ r: 9, fill: '#ff6b35', stroke: '#fff', strokeWidth: 3 }}
+                      label={{ position: 'top', fill: '#d84315', fontSize: 11, fontWeight: 'bold', offset: 12 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
