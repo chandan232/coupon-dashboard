@@ -1509,41 +1509,41 @@ export default function CouponsPage() {
                   }))} margin={{ top: 30, right: 80, left: 80, bottom: 60 }}>
                     <defs>
                       <linearGradient id="colorBuyers" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#059669" stopOpacity={1}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={1}/>
+                        <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.3}/>
                       </linearGradient>
                       <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0d9488" stopOpacity={1}/>
-                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={1}/>
+                        <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.3}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" strokeWidth={1.5} />
                     <XAxis
                       dataKey="displayDate"
-                      stroke="#059669"
+                      stroke="#6b7280"
                       style={{ fontSize: '14px', fontWeight: 700 }}
                       angle={-45}
                       textAnchor="end"
                       height={80}
                     />
                     <YAxis
-                      stroke="#059669"
-                      style={{ fontSize: '14px', fontWeight: 700 }}
+                      stroke="#3b82f6"
+                      style={{ fontSize: '14px', fontWeight: 700, color: '#3b82f6' }}
                     />
                     <YAxis
                       yAxisId="right"
-                      stroke="#0d9488"
-                      style={{ fontSize: '14px', fontWeight: 700 }}
+                      stroke="#f59e0b"
+                      style={{ fontSize: '14px', fontWeight: 700, color: '#f59e0b' }}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: 'rgba(255, 255, 255, 0.99)',
-                        border: '3px solid #059669',
+                        border: '3px solid #3b82f6',
                         borderRadius: '16px',
                         padding: '20px',
-                        boxShadow: '0 25px 50px rgba(16, 185, 129, 0.35)',
+                        boxShadow: '0 25px 50px rgba(59, 130, 246, 0.35)',
                       }}
-                      labelStyle={{ color: '#059669', fontSize: '14px', fontWeight: 'bold' }}
+                      labelStyle={{ color: '#1f2937', fontSize: '14px', fontWeight: 'bold' }}
                       formatter={(value: any, name: any) => {
                         const formattedValue = num(value);
                         if (name === '👥 Unique Buyers') return [formattedValue, '👥 Unique Buyers'];
@@ -1562,10 +1562,10 @@ export default function CouponsPage() {
                       fill="url(#colorBuyers)"
                       name="👥 Unique Buyers"
                       radius={[12, 12, 0, 0]}
-                      stroke="#059669"
+                      stroke="#3b82f6"
                       strokeWidth={2}
                     >
-                      <LabelList dataKey="buyers" position="top" fill="#059669" fontSize={14} fontWeight="bold" offset={8} />
+                      <LabelList dataKey="buyers" position="top" fill="#3b82f6" fontSize={14} fontWeight="bold" offset={8} />
                     </Bar>
                     <Bar
                       yAxisId="right"
@@ -1573,10 +1573,10 @@ export default function CouponsPage() {
                       fill="url(#colorOrders)"
                       name="📦 Orders"
                       radius={[12, 12, 0, 0]}
-                      stroke="#0d9488"
+                      stroke="#f59e0b"
                       strokeWidth={2}
                     >
-                      <LabelList dataKey="orders" position="top" fill="#0d9488" fontSize={14} fontWeight="bold" offset={8} />
+                      <LabelList dataKey="orders" position="top" fill="#f59e0b" fontSize={14} fontWeight="bold" offset={8} />
                     </Bar>
                   </ComposedChart>
                 </ResponsiveContainer>
