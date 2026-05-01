@@ -1,4 +1,4 @@
-# Coupon Management Dashboard
+# Coupon & Voucher Management Dashboard
 
 A full-stack Next.js application for coupon performance management with management-level KPIs and detailed analytics.
 
