@@ -1090,14 +1090,14 @@ export default function CouponsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gradient-to-r from-purple-100 to-purple-200 border-b border-purple-300 text-slate-900 text-xs uppercase tracking-wide font-bold">
-                      <th className="px-4 py-3 text-left">Code</th>
-                      <th className="px-4 py-3 text-left">Coupon Name</th>
-                      <th className="px-4 py-3 text-right">Applied Amount</th>
-                      <th className="px-4 py-3 text-right">Order Count</th>
-                      <th className="px-4 py-3 text-right">Order Value</th>
-                      <th className="px-4 py-3 text-right">Avg Order Value</th>
-                      <th className="px-4 py-3 text-right">Avg Applied Amount</th>
-                      <th className="px-4 py-3 text-right">Applied Amount %</th>
+                      <th className="px-4 py-3 text-center">Code</th>
+                      <th className="px-4 py-3 text-center">Coupon Name</th>
+                      <th className="px-4 py-3 text-center">Applied Amount</th>
+                      <th className="px-4 py-3 text-center">Order Count</th>
+                      <th className="px-4 py-3 text-center">Order Value</th>
+                      <th className="px-4 py-3 text-center">Avg Order Value</th>
+                      <th className="px-4 py-3 text-center">Avg Applied Amount</th>
+                      <th className="px-4 py-3 text-center">Applied Amount %</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-purple-200">
@@ -1121,14 +1121,14 @@ export default function CouponsPage() {
                             className={`khilna-row cursor-pointer hover:bg-purple-100 transition-colors ${selectedDashboardCode === coupon.code ? 'bg-purple-100/80 border-l-4 border-purple-600' : 'bg-purple-50/30'}`}
                             onClick={() => setSelectedDashboardCode(coupon.code)}
                           >
-                            <td className="px-4 py-3 font-mono font-bold text-slate-900 hover:underline">{coupon.code}</td>
-                            <td className="px-4 py-3 text-slate-900 font-medium">{coupon.coupon_name}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{fmt(Number(coupon.total_discount_burn))}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{num(coupon.usage_count)}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{fmt(Number(coupon.total_revenue))}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{fmtWhole(Number(coupon.avg_order_value))}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{fmt(avgAppliedAmount)}</td>
-                            <td className="px-4 py-3 text-right text-slate-900 font-bold">{appliedAmountPct}%</td>
+                            <td className="px-4 py-3 text-center font-mono font-bold text-slate-900 hover:underline">{coupon.code}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-medium">{coupon.coupon_name}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmt(Number(coupon.total_discount_burn))}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{num(coupon.usage_count)}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmt(Number(coupon.total_revenue))}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmtWhole(Number(coupon.avg_order_value))}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmt(avgAppliedAmount)}</td>
+                            <td className="px-4 py-3 text-center text-slate-900 font-bold">{appliedAmountPct}%</td>
                           </tr>
                         );
                       })
