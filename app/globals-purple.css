@@ -1,0 +1,642 @@
+/* ============================================================================
+   MODERN PURPLE DASHBOARD - COMPLETE REDESIGN
+   Color System & Micro-interactions with "Khilna Effect"
+   ============================================================================ */
+
+@import "tailwindcss";
+
+/* ============================================================================
+   COLOR PALETTE DEFINITION
+   ============================================================================ */
+
+:root {
+  /* Primary Colors */
+  --color-primary: #7c3aed;           /* Rich Purple - Main brand color */
+  --color-primary-light: #a78bfa;     /* Light Purple - Secondary */
+  --color-primary-lighter: #ede9fe;   /* Very Light Purple - Background */
+
+  /* Accent Colors */
+  --color-accent: #a855f7;            /* Bright Violet - Highlights */
+  --color-accent-light: #d8b4fe;      /* Light Violet */
+
+  /* Background Colors */
+  --color-bg-primary: #f8f5ff;        /* Very light purple tint */
+  --color-bg-secondary: #f3e8ff;      /* Soft lavender background */
+  --color-bg-card: #ffffff;           /* Pure white for cards */
+
+  /* Border Colors */
+  --color-border: #e9d5ff;            /* Subtle desaturated purple */
+  --color-border-light: #f0e7ff;      /* Very light purple border */
+
+  /* Text Colors */
+  --color-text-primary: #4c1d95;      /* Dark purple - Main text */
+  --color-text-secondary: #6b21a8;    /* Medium purple - Secondary text */
+  --color-text-tertiary: #9333ea;     /* Bright purple - Tertiary text */
+  --color-text-light: #c4b5fd;        /* Light purple - Disabled text */
+
+  /* Shadow Colors */
+  --shadow-sm: 0 1px 2px 0 rgba(124, 58, 237, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(124, 58, 237, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(124, 58, 237, 0.15);
+  --shadow-xl: 0 20px 25px -5px rgba(124, 58, 237, 0.2);
+  --shadow-hover: 0 25px 50px -12px rgba(124, 58, 237, 0.25);
+
+  /* Transition Timing */
+  --transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* ============================================================================
+   ANIMATION KEYFRAMES - "KHILNA EFFECT"
+   ============================================================================ */
+
+@keyframes khilna-bloom {
+  0% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+    box-shadow: var(--shadow-md);
+  }
+  50% {
+    filter: brightness(1.05) saturate(1.1);
+  }
+  100% {
+    transform: scale(1.02);
+    filter: brightness(1.08) saturate(1.15);
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+@keyframes khilna-lift {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+@keyframes khilna-glow {
+  0%, 100% {
+    box-shadow: var(--shadow-md);
+  }
+  50% {
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+@keyframes khilna-text-highlight {
+  0%, 100% {
+    color: var(--color-text-primary);
+    text-shadow: none;
+  }
+  50% {
+    color: var(--color-primary);
+    text-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
+  }
+}
+
+@keyframes khilna-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1.1;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* ============================================================================
+   REUSABLE UTILITY CLASSES
+   ============================================================================ */
+
+/* Interactive Element Base */
+.interactive-base {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+}
+
+/* Khilna Effect - Card Style */
+.khilna-card {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.khilna-card:hover {
+  animation: khilna-bloom 0.25s ease-in-out forwards;
+  border-color: var(--color-accent-light);
+}
+
+/* Khilna Effect - Row Style */
+.khilna-row {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+}
+
+.khilna-row:hover {
+  background-color: var(--color-bg-secondary);
+  box-shadow: inset 0 0 12px rgba(124, 58, 237, 0.1);
+}
+
+/* Khilna Effect - Button Style */
+.khilna-button {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.khilna-button:hover:not(:disabled) {
+  animation: khilna-bloom 0.25s ease-in-out forwards;
+}
+
+.khilna-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.khilna-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Khilna Effect - Tab Style */
+.khilna-tab {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.khilna-tab:hover:not(.active) {
+  background-color: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.khilna-tab.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.khilna-tab.active:hover {
+  animation: khilna-bloom 0.25s ease-in-out forwards;
+  color: white;
+}
+
+/* ============================================================================
+   COMPONENT SPECIFIC STYLES
+   ============================================================================ */
+
+/* Cards */
+.metric-card {
+  @apply khilna-card;
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-card) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metric-card:hover {
+  border-color: var(--color-accent-light);
+}
+
+.metric-card-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  transition: var(--transition-base);
+}
+
+.metric-card:hover .metric-card-label {
+  color: var(--color-primary);
+}
+
+.metric-card-value {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  transition: var(--transition-base);
+}
+
+.metric-card:hover .metric-card-value {
+  animation: khilna-text-highlight 0.25s ease-in-out forwards;
+  filter: brightness(1.1);
+}
+
+.metric-card-description {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  transition: var(--transition-base);
+}
+
+.metric-card:hover .metric-card-description {
+  color: var(--color-text-secondary);
+}
+
+/* Tables */
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg-card);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-table thead {
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-primary-lighter) 100%);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.dashboard-table thead th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-table tbody tr {
+  @apply khilna-row;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dashboard-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.dashboard-table tbody td {
+  padding: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+
+.dashboard-table tbody tr:hover td {
+  color: var(--color-text-primary);
+}
+
+/* Buttons */
+.btn-primary {
+  @apply khilna-button;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  background-size: 200% 200%;
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  animation: khilna-bloom 0.25s ease-in-out forwards;
+  background-position: 100% 100%;
+}
+
+.btn-secondary {
+  @apply khilna-button;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary-lighter);
+  border-color: var(--color-primary);
+}
+
+.btn-ghost {
+  @apply khilna-button;
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-border);
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-primary-lighter);
+  border-color: var(--color-primary);
+}
+
+/* Badges & Pills */
+.badge {
+  @apply khilna-button;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+}
+
+.badge:hover {
+  background-color: var(--color-primary-lighter);
+  border-color: var(--color-primary);
+}
+
+.badge-active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* Input Fields */
+.input-field {
+  position: relative;
+  transition: var(--transition-base);
+  will-change: transform, box-shadow, filter;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-card);
+  transition: var(--transition-base);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.input-field:hover:not(:focus) {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Select Fields */
+.select-field {
+  @apply input-field appearance-none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%237c3aed' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* ============================================================================
+   LAYOUT COMPONENTS
+   ============================================================================ */
+
+/* Header / Navbar */
+.navbar {
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-card) 100%);
+  border-bottom: 2px solid var(--color-border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Main Content Area */
+.main-content {
+  padding: 2rem 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Grid Layouts */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-4col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-5col {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+}
+
+/* ============================================================================
+   ACCESSIBILITY & RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .grid-4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-5col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-2col,
+  .grid-3col,
+  .grid-4col,
+  .grid-5col {
+    grid-template-columns: 1fr;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark Mode Support (Future-proof) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-primary: #1a1a2e;
+    --color-bg-secondary: #16213e;
+    --color-bg-card: #0f3460;
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #b0b0b0;
+  }
+
+  body {
+    background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+  }
+}
+
+/* ============================================================================
+   TEXT UTILITIES
+   ============================================================================ */
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.font-weight-light {
+  font-weight: 300;
+}
+
+.font-weight-regular {
+  font-weight: 400;
+}
+
+.font-weight-medium {
+  font-weight: 500;
+}
+
+.font-weight-semibold {
+  font-weight: 600;
+}
+
+.font-weight-bold {
+  font-weight: 700;
+}
+
+.font-weight-extrabold {
+  font-weight: 900;
+}
+
+/* ============================================================================
+   SPACING UTILITIES
+   ============================================================================ */
+
+.space-xs { gap: 0.25rem; }
+.space-sm { gap: 0.5rem; }
+.space-md { gap: 1rem; }
+.space-lg { gap: 1.5rem; }
+.space-xl { gap: 2rem; }
+
+/* ============================================================================
+   VISUAL EFFECTS
+   ============================================================================ */
+
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-card) 100%);
+}
+
+.blur-bg {
+  backdrop-filter: blur(10px);
+  background-color: rgba(248, 245, 255, 0.8);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}

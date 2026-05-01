@@ -1,0 +1,443 @@
+@import "tailwindcss";
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.25); }
+  50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.4); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes hover-lift {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+
+@keyframes neon-pulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+  50% { text-shadow: 0 0 20px rgba(6, 182, 212, 0.8); }
+}
+
+:root {
+  --bg: #f5ede0;
+  --bg-light: #e8e5d0;
+  --bg-card: #f5f3ed;
+  --text-dark: #1f2937;
+  --text-primary: #374151;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-subtle: #6b7280;
+  --accent: #9db4a0;
+  --accent-light: #b8c5a6;
+  --accent-dark: #7a8d7e;
+  --secondary: #b8c5a6;
+  --secondary-light: #d0dcc8;
+  --border: #9db4a0;
+  --border-light: #b8c5a6;
+}
+
+body {
+  background: linear-gradient(135deg, #f5ede0 0%, #e8e5d0 25%, #f0e9dd 50%, #e8e5d0 75%, #f5ede0 100%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.blink-carousel {
+  animation: blink 3.5s ease-in-out infinite;
+}
+
+.premium-card {
+  background: linear-gradient(135deg, rgba(245, 243, 237, 0.95) 0%, rgba(232, 229, 208, 0.85) 50%, rgba(240, 233, 221, 0.9) 100%);
+  border: 2px solid #b8c5a6;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(90, 111, 98, 0.08), 0 0 1px rgba(157, 180, 160, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(157, 180, 160, 0.03) 0%, rgba(184, 197, 166, 0.03) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.premium-card:hover {
+  box-shadow: 0 12px 48px rgba(90, 111, 98, 0.15), 0 0 1px rgba(157, 180, 160, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: #9db4a0;
+  transform: translateY(-4px);
+}
+
+.accent-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(6, 182, 212, 0.3);
+  color: var(--text-dark);
+}
+
+/* Text Styles */
+.text-dark {
+  color: var(--text-dark);
+}
+
+.text-heading {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.text-body {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Hover Effects */
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.hover-card:hover {
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
+  transform: translateY(-4px);
+  background: linear-gradient(135deg, rgba(249, 247, 255, 0.98) 0%, rgba(243, 232, 255, 0.98) 100%);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.hover-row {
+  transition: all 0.2s ease;
+}
+
+.hover-row:hover {
+  background-color: rgba(139, 92, 246, 0.05);
+}
+
+/* Professional Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+  color: white;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  box-shadow: 0 8px 24px rgba(167, 139, 250, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  border: 1.5px solid var(--border);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-light);
+  border-color: var(--accent);
+  color: var(--accent-dark);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+}
+
+/* Table Styles */
+table {
+  width: 100%;
+}
+
+table thead tr {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(196, 181, 253, 0.05) 100%);
+}
+
+table thead th {
+  font-weight: 700;
+  padding: 12px;
+  text-align: left;
+}
+
+table tbody tr {
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+}
+
+table tbody tr:hover {
+  background-color: rgba(139, 92, 246, 0.06);
+  box-shadow: inset 0 0 8px rgba(139, 92, 246, 0.05);
+}
+
+table td {
+  padding: 12px;
+  font-weight: 500;
+}
+
+/* ===== Modern Card Component Animations ===== */
+
+/* Khilne Wala Effect - Main Bloom Animation */
+@keyframes khilne-bloom {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.25);
+  }
+  50% {
+    box-shadow: 0 15px 40px rgba(139, 92, 246, 0.35);
+  }
+  100% {
+    transform: scale(1.02);
+    box-shadow: 0 20px 50px rgba(139, 92, 246, 0.45);
+  }
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Icon Pulse */
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Text Glow */
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    text-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+}
+
+/* Gradient Border Animation */
+@keyframes gradient-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Particle Bloom */
+@keyframes particle-bloom {
+  0% {
+    transform: scale(0) translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translate(var(--tx), var(--ty));
+    opacity: 0;
+  }
+}
+
+/* Light Up Effect */
+@keyframes light-up {
+  0% {
+    background-color: rgba(139, 92, 246, 0.1);
+  }
+  50% {
+    background-color: rgba(167, 139, 250, 0.2);
+  }
+  100% {
+    background-color: rgba(139, 92, 246, 0.1);
+  }
+}
+
+/* Glow Pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 0px rgba(139, 92, 246, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+  }
+}
+
+/* Modern Card Hover State */
+.modern-card {
+  position: relative;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.modern-card:hover {
+  animation: khilne-bloom 300ms ease-in-out forwards;
+}
+
+.modern-card-icon {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover .modern-card-icon {
+  animation: icon-pulse 300ms ease-in-out;
+}
+
+.modern-card-title {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover .modern-card-title {
+  animation: text-glow 300ms ease-in-out;
+}
+
+.modern-card-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+}
+
+.modern-card:hover .modern-card-shimmer {
+  animation: shimmer 600ms ease-in-out;
+  opacity: 1;
+}
+
+/* Smooth Scale Transform */
+@supports (transform: scale(1.02)) {
+  .modern-card {
+    will-change: transform, box-shadow;
+  }
+
+  .modern-card:hover {
+    will-change: auto;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .modern-card {
+    color-scheme: dark;
+  }
+
+  .modern-card:hover {
+    background-color: rgba(139, 92, 246, 0.15);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .modern-card,
+  .modern-card-icon,
+  .modern-card-title,
+  .modern-card-shimmer {
+    animation: none;
+    transition: none;
+  }
+
+  .modern-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== Khilna Effect Utility Classes ===== */
+
+/* Khilna Card - Interactive card with bloom effect */
+.khilna-card {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow, filter;
+}
+
+.khilna-card:hover {
+  animation: khilne-bloom 0.25s ease-in-out forwards;
+}
+
+/* Khilna Row - Table row with subtle hover effect */
+.khilna-row {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow, filter;
+}
+
+.khilna-row:hover {
+  background-color: rgba(139, 92, 246, 0.08);
+  box-shadow: inset 0 0 12px rgba(124, 58, 237, 0.1);
+}
+
+/* Khilna Button - Interactive button with bloom effect */
+.khilna-button {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow, filter;
+}
+
+.khilna-button:hover:not(:disabled) {
+  animation: khilne-bloom 0.25s ease-in-out forwards;
+}
+
+/* Khilna Tab - Interactive tab with subtle effects */
+.khilna-tab {
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow, filter;
+}
