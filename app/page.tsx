@@ -363,6 +363,12 @@ export default function CouponsPage() {
 
   const [buyerCouponTrends, setBuyerCouponTrends] = useState<any[]>([]);
 
+  // Pagination states
+  const [couponListPage, setCouponListPage] = useState(1);
+  const [topCouponsPage, setTopCouponsPage] = useState(1);
+  const [retailerPage, setRetailerPage] = useState(1);
+  const itemsPerPage = 10;
+
   const fetchOffers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -909,7 +915,7 @@ export default function CouponsPage() {
                         </td>
                       </tr>
                     ) : (
-                      filtered.map((o) => (
+                      filtered.slice((couponListPage - 1) * itemsPerPage, couponListPage * itemsPerPage).map((o) => (
                         <tr key={o.id} className="khilna-row bg-purple-50/30 hover:bg-purple-100/60">
                           <td className="px-4 py-3 font-mono font-bold text-slate-900">
                             <button
@@ -973,10 +979,50 @@ export default function CouponsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {filtered.length > itemsPerPage && (
+                <div className="mt-6 flex items-center justify-between px-4">
+                  <p className="text-xs font-medium text-slate-700">
+                    Showing {((couponListPage - 1) * itemsPerPage) + 1} - {Math.min(couponListPage * itemsPerPage, filtered.length)} of {filtered.length} coupons
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCouponListPage(p => Math.max(1, p - 1))}
+                      disabled={couponListPage === 1}
+                      className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
+                    >
+                      ← Previous
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: Math.ceil(filtered.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCouponListPage(page)}
+                          className={`px-3 py-2 rounded-lg font-bold transition-colors ${
+                            couponListPage === page
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-purple-100 text-purple-900 hover:bg-purple-200'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setCouponListPage(p => Math.min(Math.ceil(filtered.length / itemsPerPage), p + 1))}
+                      disabled={couponListPage === Math.ceil(filtered.length / itemsPerPage)}
+                      className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
             )}
 
             {!loading && !error && (
-              <p className="mt-3 text-xs text-gray-700">{filtered.length} coupon(s) shown</p>
+              <p className="mt-3 text-xs text-gray-700">{filtered.length} coupon(s) available</p>
             )}
           </>
         ) : topTab === 'COUPON' && subTab === 0 ? (
@@ -1927,9 +1973,9 @@ export default function CouponsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-emerald-100">
-                      {retailerAnalytics.retailer_wise.slice(0, 10).map((retailer: any, idx: number) => (
+                      {retailerAnalytics.retailer_wise.slice((retailerPage - 1) * itemsPerPage, retailerPage * itemsPerPage).map((retailer: any, idx: number) => (
                         <tr key={idx} className="hover:bg-emerald-50/50 transition-colors">
-                          <td className="px-4 py-3 font-bold text-emerald-700">#{idx + 1}</td>
+                          <td className="px-4 py-3 font-bold text-emerald-700">#{(retailerPage - 1) * itemsPerPage + idx + 1}</td>
                           <td className="px-4 py-3 font-semibold text-slate-900">{retailer.retailer_name}</td>
                           <td className="px-4 py-3 text-center"><span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold text-sm">{retailer.applied_coupons_count}</span></td>
                           <td className="px-4 py-3 text-center text-slate-700">{retailer.total_orders}</td>
@@ -1940,6 +1986,46 @@ export default function CouponsPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Controls for Retailer Table */}
+                {retailerAnalytics.retailer_wise.length > itemsPerPage && (
+                  <div className="mt-6 flex items-center justify-between px-4">
+                    <p className="text-xs font-medium text-slate-700">
+                      Showing {((retailerPage - 1) * itemsPerPage) + 1} - {Math.min(retailerPage * itemsPerPage, retailerAnalytics.retailer_wise.length)} of {retailerAnalytics.retailer_wise.length} sellers
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setRetailerPage(p => Math.max(1, p - 1))}
+                        disabled={retailerPage === 1}
+                        className="px-4 py-2 bg-emerald-200 text-emerald-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-300 transition-colors"
+                      >
+                        ← Previous
+                      </button>
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: Math.ceil(retailerAnalytics.retailer_wise.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            onClick={() => setRetailerPage(page)}
+                            className={`px-3 py-2 rounded-lg font-bold transition-colors ${
+                              retailerPage === page
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setRetailerPage(p => Math.min(Math.ceil(retailerAnalytics.retailer_wise.length / itemsPerPage), p + 1))}
+                        disabled={retailerPage === Math.ceil(retailerAnalytics.retailer_wise.length / itemsPerPage)}
+                        className="px-4 py-2 bg-emerald-200 text-emerald-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-300 transition-colors"
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
