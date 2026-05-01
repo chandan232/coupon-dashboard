@@ -1529,13 +1529,11 @@ export default function CouponsPage() {
                     <YAxis
                       stroke="#059669"
                       style={{ fontSize: '14px', fontWeight: 700 }}
-                      label={{ value: '👥 Unique Buyers', angle: -90, position: 'insideLeft', offset: -10, style: { fontSize: '14px', fontWeight: 'bold', fill: '#059669' } }}
                     />
                     <YAxis
                       yAxisId="right"
                       stroke="#0d9488"
                       style={{ fontSize: '14px', fontWeight: 700 }}
-                      label={{ value: '📦 Orders', angle: 90, position: 'insideRight', offset: -10, style: { fontSize: '14px', fontWeight: 'bold', fill: '#0d9488' } }}
                     />
                     <Tooltip
                       contentStyle={{
