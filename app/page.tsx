@@ -2533,7 +2533,7 @@ export default function CouponsPage() {
                           <td className="px-4 py-3 font-semibold text-slate-900">{v.coupon_name}</td>
                           <td className="px-4 py-3">
                             <button
-                              onClick={() => setSelectedBuyerId(v.buyerId || null)}
+                              onClick={() => setSelectedBuyerId((v as any).buyerId || null)}
                               className="text-sm font-mono font-bold text-purple-700 hover:text-purple-900 hover:underline cursor-pointer"
                             >
                               {(v as any).buyer_phone || '—'}
