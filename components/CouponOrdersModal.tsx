@@ -213,17 +213,17 @@ export default function CouponOrdersModal({
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gradient-to-r from-purple-100 to-indigo-100 border-b border-purple-300 text-slate-900 text-xs uppercase tracking-wide font-bold">
-                        <th className="px-3 py-3 text-left whitespace-nowrap">PO #</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Order Status</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Seller Phone</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Buyer Phone</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Seller Business</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Buyer Business</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Coupon Applied</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Order Created</th>
-                        <th className="px-3 py-3 text-right whitespace-nowrap">Coupon Amount</th>
-                        <th className="px-3 py-3 text-right whitespace-nowrap">Order Amount</th>
-                        <th className="px-3 py-3 text-right whitespace-nowrap">Coupon / Order %</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">PO #</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Order Status</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Seller Phone</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Buyer Phone</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Seller Business</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Buyer Business</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Coupon Applied</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Order Created</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Coupon Amount</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Order Amount</th>
+                        <th className="px-3 py-3 text-center whitespace-nowrap">Coupon / Order %</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-purple-100">
@@ -235,17 +235,17 @@ export default function CouponOrdersModal({
                         </tr>
                       ) : pageOrders.map((o, i) => (
                         <tr key={`${o.poNumber}-${i}`} className="hover:bg-purple-50/80 transition-colors">
-                          <td className="px-3 py-3 font-mono font-bold text-purple-800 whitespace-nowrap">#{o.poNumber}</td>
-                          <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={o.orderStatus ?? '—'} /></td>
-                          <td className="px-3 py-3 text-slate-900 whitespace-nowrap">{o.sellerPhone || '—'}</td>
-                          <td className="px-3 py-3 text-slate-900 whitespace-nowrap">{o.buyerPhone || '—'}</td>
-                          <td className="px-3 py-3 text-slate-900 max-w-[200px] truncate" title={o.sellerBusinessName || ''}>{o.sellerBusinessName || '—'}</td>
-                          <td className="px-3 py-3 text-slate-900 max-w-[200px] truncate" title={o.buyerBusinessName || ''}>{o.buyerBusinessName || '—'}</td>
-                          <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.couponAppliedAt)}</td>
-                          <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.orderCreatedAt)}</td>
-                          <td className="px-3 py-3 text-right font-bold text-slate-900 whitespace-nowrap">{fmt(o.appliedCouponAmount)}</td>
-                          <td className="px-3 py-3 text-right font-bold text-slate-900 whitespace-nowrap">{fmt(o.orderAmount)}</td>
-                          <td className="px-3 py-3 text-right font-black text-purple-800 whitespace-nowrap">{pct(o.couponPctOfOrder)}</td>
+                          <td className="px-3 py-3 text-center font-mono font-bold text-purple-800 whitespace-nowrap">#{o.poNumber}</td>
+                          <td className="px-3 py-3 text-center whitespace-nowrap"><StatusBadge status={o.orderStatus ?? '—'} /></td>
+                          <td className="px-3 py-3 text-center text-slate-900 whitespace-nowrap">{o.sellerPhone || '—'}</td>
+                          <td className="px-3 py-3 text-center text-slate-900 whitespace-nowrap">{o.buyerPhone || '—'}</td>
+                          <td className="px-3 py-3 text-center text-slate-900 max-w-[200px] truncate" title={o.sellerBusinessName || ''}>{o.sellerBusinessName || '—'}</td>
+                          <td className="px-3 py-3 text-center text-slate-900 max-w-[200px] truncate" title={o.buyerBusinessName || ''}>{o.buyerBusinessName || '—'}</td>
+                          <td className="px-3 py-3 text-center text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.couponAppliedAt)}</td>
+                          <td className="px-3 py-3 text-center text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.orderCreatedAt)}</td>
+                          <td className="px-3 py-3 text-center font-bold text-slate-900 whitespace-nowrap">{fmt(o.appliedCouponAmount)}</td>
+                          <td className="px-3 py-3 text-center font-bold text-slate-900 whitespace-nowrap">{fmt(o.orderAmount)}</td>
+                          <td className="px-3 py-3 text-center font-black text-purple-800 whitespace-nowrap">{pct(o.couponPctOfOrder)}</td>
                         </tr>
                       ))}
                     </tbody>
