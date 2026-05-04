@@ -54,11 +54,10 @@ export default function CouponOrdersModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Fetch orders when modal opens
+  // Fetch orders when modal opens — only APPLIED orders are shown
   useEffect(() => {
     if (!isOpen || !couponCode) return;
     const ctrl = new AbortController();
@@ -66,7 +65,7 @@ export default function CouponOrdersModal({
       setLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams({ code: couponCode });
+        const params = new URLSearchParams({ code: couponCode, status: 'APPLIED' });
         const res = await fetch(`/api/coupon-order-details?${params.toString()}`, { signal: ctrl.signal });
         const json = await res.json();
         if (json.error) throw new Error(json.error);
@@ -86,7 +85,6 @@ export default function CouponOrdersModal({
   useEffect(() => {
     if (isOpen) {
       setSearch('');
-      setStatusFilter('');
       setPage(1);
     }
   }, [isOpen, couponCode]);
@@ -101,17 +99,17 @@ export default function CouponOrdersModal({
 
   if (!isOpen) return null;
 
-  // Client-side filtering (search + status)
+  // Client-side search filter (status is pre-filtered to APPLIED on the server)
   const filteredOrders = orders.filter(o => {
     const s = search.trim().toLowerCase();
-    const matchesSearch = !s ||
+    if (!s) return true;
+    return (
       o.poNumber?.toLowerCase().includes(s) ||
       o.buyerPhone?.toLowerCase().includes(s) ||
       o.buyerBusinessName?.toLowerCase().includes(s) ||
       o.sellerPhone?.toLowerCase().includes(s) ||
-      o.sellerBusinessName?.toLowerCase().includes(s);
-    const matchesStatus = !statusFilter || o.couponStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+      o.sellerBusinessName?.toLowerCase().includes(s)
+    );
   });
 
   // Pagination
@@ -124,9 +122,6 @@ export default function CouponOrdersModal({
   const totalOrderValue = filteredOrders.reduce((acc, o) => acc + (Number(o.orderAmount) || 0), 0);
   const totalAppliedAmount = filteredOrders.reduce((acc, o) => acc + (Number(o.appliedCouponAmount) || 0), 0);
   const avgPct = totalOrderValue > 0 ? (totalAppliedAmount * 100) / totalOrderValue : 0;
-
-  // Unique statuses for filter dropdown
-  const uniqueStatuses = Array.from(new Set(orders.map(o => o.couponStatus).filter(Boolean)));
 
   return (
     <div
@@ -150,11 +145,11 @@ export default function CouponOrdersModal({
             </div>
             <div>
               <h2 className="text-2xl font-black bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
-                Orders for Coupon
+                Applied Orders
               </h2>
               <p className="text-xs font-medium text-slate-700">
-                Code <span className="font-mono font-bold text-purple-800">{couponCode}</span>
-                {!loading && ` · ${filteredOrders.length} order${filteredOrders.length === 1 ? '' : 's'}`}
+                Coupon <span className="font-mono font-bold text-purple-800">{couponCode}</span>
+                {!loading && ` · ${filteredOrders.length} applied order${filteredOrders.length === 1 ? '' : 's'}`}
               </p>
             </div>
           </div>
@@ -201,8 +196,8 @@ export default function CouponOrdersModal({
                 </div>
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              {/* Search filter */}
+              <div className="flex gap-3 items-center">
                 <input
                   type="text"
                   value={search}
@@ -210,16 +205,6 @@ export default function CouponOrdersModal({
                   placeholder="Search PO, buyer, seller…"
                   className="flex-1 px-4 py-2 rounded-lg border-2 border-purple-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm font-medium"
                 />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                  className="px-4 py-2 rounded-lg border-2 border-purple-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm font-medium"
-                >
-                  <option value="">All Coupon Statuses</option>
-                  {uniqueStatuses.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
               </div>
 
               {/* Orders table */}
@@ -230,7 +215,6 @@ export default function CouponOrdersModal({
                       <tr className="bg-gradient-to-r from-purple-100 to-indigo-100 border-b border-purple-300 text-slate-900 text-xs uppercase tracking-wide font-bold">
                         <th className="px-3 py-3 text-left whitespace-nowrap">PO #</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Order Status</th>
-                        <th className="px-3 py-3 text-left whitespace-nowrap">Coupon Status</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Seller Phone</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Buyer Phone</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Seller Business</th>
@@ -243,15 +227,14 @@ export default function CouponOrdersModal({
                     <tbody className="divide-y divide-purple-100">
                       {pageOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={10} className="px-4 py-10 text-center text-slate-700 font-medium">
-                            No orders found{search || statusFilter ? ' for current filters' : ''}.
+                          <td colSpan={9} className="px-4 py-10 text-center text-slate-700 font-medium">
+                            No applied orders found{search ? ' for current search' : ''}.
                           </td>
                         </tr>
                       ) : pageOrders.map((o, i) => (
                         <tr key={`${o.poNumber}-${i}`} className="hover:bg-purple-50/80 transition-colors">
                           <td className="px-3 py-3 font-mono font-bold text-purple-800 whitespace-nowrap">#{o.poNumber}</td>
                           <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={o.orderStatus ?? '—'} /></td>
-                          <td className="px-3 py-3 whitespace-nowrap"><StatusBadge status={o.couponStatus ?? '—'} /></td>
                           <td className="px-3 py-3 text-slate-900 whitespace-nowrap">{o.sellerPhone || '—'}</td>
                           <td className="px-3 py-3 text-slate-900 whitespace-nowrap">{o.buyerPhone || '—'}</td>
                           <td className="px-3 py-3 text-slate-900 max-w-[200px] truncate" title={o.sellerBusinessName || ''}>{o.sellerBusinessName || '—'}</td>
