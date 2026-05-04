@@ -25,6 +25,10 @@ export default function CreateVoucherModal({ isOpen, onClose, onSuccess }: Creat
   const [buyerSuggestions, setBuyerSuggestions] = useState<BuyerInfo[]>([]);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Get employee info from localStorage
+  const employeeEmail = typeof window !== 'undefined' ? localStorage.getItem('employeeEmail') || '' : '';
+  const employeeName = typeof window !== 'undefined' ? localStorage.getItem('employeeName') || '' : '';
+
   const [formData, setFormData] = useState({
     code: '',
     label: '',
@@ -140,6 +144,8 @@ export default function CreateVoucherModal({ isOpen, onClose, onSuccess }: Creat
         buyerId: selectedBuyer.id,
         conditionIdWithoutPOContext: formData.conditionIdWithoutPOContext ? Number(formData.conditionIdWithoutPOContext) : null,
         conditionIdWithPOContext: formData.conditionIdWithPOContext ? Number(formData.conditionIdWithPOContext) : null,
+        createdBy: employeeName, // Add employee name as createdBy
+        createdByEmail: employeeEmail, // Add employee email
       };
 
       console.log('Submitting voucher payload:', payload);

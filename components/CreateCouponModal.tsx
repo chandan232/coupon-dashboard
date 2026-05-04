@@ -11,6 +11,10 @@ interface CreateCouponModalProps {
 export default function CreateCouponModal({ isOpen, onClose, onSuccess }: CreateCouponModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get employee info from localStorage
+  const employeeEmail = typeof window !== 'undefined' ? localStorage.getItem('employeeEmail') || '' : '';
+  const employeeName = typeof window !== 'undefined' ? localStorage.getItem('employeeName') || '' : '';
   const [formData, setFormData] = useState({
     code: '',
     label: '',
@@ -60,6 +64,8 @@ export default function CreateCouponModal({ isOpen, onClose, onSuccess }: Create
         expiryTime: new Date(formData.expiryTime).toISOString(),
         isActive: true,
         isTest: false,
+        createdBy: employeeName, // Add employee name as createdBy
+        createdByEmail: employeeEmail, // Add employee email
       };
 
       const res = await fetch('/api/offers/create', {

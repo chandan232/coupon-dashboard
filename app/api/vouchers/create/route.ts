@@ -1,6 +1,27 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 
+/**
+ * Look up the employee's name from "employeeBase"."employee" by email.
+ * Returns the name, or null if not found.
+ */
+async function lookupEmployeeName(email: string): Promise<string | null> {
+  if (!email) return null;
+  try {
+    const rows = await query<{ name: string | null }>(
+      `SELECT name FROM "employeeBase"."employee" WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [email]
+    );
+    if (rows.length > 0 && rows[0].name) {
+      return rows[0].name;
+    }
+    return null;
+  } catch (err) {
+    console.error('Employee lookup error:', err);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -21,6 +42,7 @@ export async function POST(req: NextRequest) {
       buyerId,
       conditionIdWithoutPOContext,
       conditionIdWithPOContext,
+      createdByEmail,
     } = body;
 
     if (!code || !discountDetails || !metaDetails || !buyerId) {
@@ -31,6 +53,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Look up the employee name from the email used to log in.
+    // Falls back to whatever was sent (or 'System') if the lookup fails.
+    const lookedUpName = await lookupEmployeeName(createdByEmail);
+    const createdByName = lookedUpName || body.createdBy || 'System';
+    console.log(`Voucher createdBy resolved: email=${createdByEmail} -> name="${createdByName}"`);
 
     // Build INSERT statement dynamically to handle optional condition ID fields
     const columns = [
@@ -50,9 +78,10 @@ export async function POST(req: NextRequest) {
       '"owner"',
       '"type"',
       '"buyerId"',
+      '"createdBy"',
     ];
 
-    const values = [
+    const values: unknown[] = [
       code,
       JSON.stringify(discountDetails),
       JSON.stringify(metaDetails),
@@ -69,6 +98,7 @@ export async function POST(req: NextRequest) {
       'PLATFORM', // owner
       'VOUCHER', // type
       buyerId,
+      createdByName, // createdBy = name looked up from employeeBase.employee
     ];
 
     // Add condition ID fields if they're provided and not null
@@ -94,8 +124,6 @@ export async function POST(req: NextRequest) {
     `;
 
     console.log('Executing SQL query for voucher creation');
-    console.log('SQL:', sql);
-    console.log('Values:', values);
     const result = await query(sql, values);
 
     console.log('Voucher creation result:', result);

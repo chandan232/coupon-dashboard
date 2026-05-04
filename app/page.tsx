@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import StatusBadge from '@/components/StatusBadge';
 import CouponDetailsModal from '@/components/CouponDetailsModal';
 import CreateCouponModal from '@/components/CreateCouponModal';
@@ -314,6 +315,45 @@ function getDateRangeParams(filter: string, customStart?: string, customEnd?: st
 }
 
 export default function CouponsPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [employeeName, setEmployeeName] = useState('');
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const name = localStorage.getItem('employeeName');
+    const email = localStorage.getItem('employeeEmail');
+
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    setEmployeeName(name || 'Support User');
+    // Store email in session for use in forms
+    if (email) {
+      sessionStorage.setItem('employeeEmail', email);
+    }
+    setIsAuthenticated(true);
+    setAuthLoading(false);
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('employeeName');
+      localStorage.removeItem('employeeEmail');
+      sessionStorage.removeItem('employeeEmail');
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+      alert('Failed to logout');
+    }
+  };
+
   const [topTab, setTopTab] = useState<TopTab>('COUPON');
   const [subTab, setSubTab] = useState(0);
   const [couponFilterTab, setCouponFilterTab] = useState(0);
@@ -579,12 +619,13 @@ export default function CouponsPage() {
   }, [dateFilter, customStartDate, customEndDate]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchOffers();
     fetchDashboardData();
     fetchRetailerAnalytics();
     fetchVouchers();
     fetchVoucherDashboard();
-  }, [fetchOffers, fetchDashboardData, fetchRetailerAnalytics, fetchVouchers, fetchVoucherDashboard]);
+  }, [isAuthenticated, fetchOffers, fetchDashboardData, fetchRetailerAnalytics, fetchVouchers, fetchVoucherDashboard]);
 
   useEffect(() => {
     if (selectedDashboardCode) {
@@ -692,6 +733,24 @@ export default function CouponsPage() {
   const formatMaxDiscount = (o: Offer) => {
     return fmt(o.max_discount);
   };
+
+  // Auth gate - render after all hooks have been called to satisfy Rules of Hooks
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg shadow-purple-400/40 mx-auto mb-4">
+            <span className="text-white font-black text-xl">✨</span>
+          </div>
+          <p className="text-slate-700 font-bold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="space-y-8 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50 min-h-screen p-8">
@@ -980,55 +1039,56 @@ export default function CouponsPage() {
                             })()}
                           </td>
                         </tr>
-                      ))
+                      ))}
+                      </>
                     )}
                   </tbody>
                 </table>
-              </div>
 
-              {/* Pagination Controls */}
-              {filtered.length > itemsPerPage && (
-                <div className="mt-6 flex items-center justify-between px-4">
-                  <p className="text-xs font-medium text-slate-700">
-                    Showing {((couponListPage - 1) * itemsPerPage) + 1} - {Math.min(couponListPage * itemsPerPage, filtered.length)} of {filtered.length} coupons
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCouponListPage(p => Math.max(1, p - 1))}
-                      disabled={couponListPage === 1}
-                      className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
-                    >
-                      ← Previous
-                    </button>
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: Math.ceil(filtered.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
-                        <button
-                          key={page}
-                          onClick={() => setCouponListPage(page)}
-                          className={`px-3 py-2 rounded-lg font-bold transition-colors ${
-                            couponListPage === page
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-purple-100 text-purple-900 hover:bg-purple-200'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
+                {/* Pagination Controls */}
+                {filtered.length > itemsPerPage && (
+                  <div className="mt-6 flex items-center justify-between px-4">
+                    <p className="text-xs font-medium text-slate-700">
+                      Showing {((couponListPage - 1) * itemsPerPage) + 1} - {Math.min(couponListPage * itemsPerPage, filtered.length)} of {filtered.length} coupons
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCouponListPage(p => Math.max(1, p - 1))}
+                        disabled={couponListPage === 1}
+                        className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
+                      >
+                        ← Previous
+                      </button>
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: Math.ceil(filtered.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            onClick={() => setCouponListPage(page)}
+                            className={`px-3 py-2 rounded-lg font-bold transition-colors ${
+                              couponListPage === page
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-purple-100 text-purple-900 hover:bg-purple-200'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setCouponListPage(p => Math.min(Math.ceil(filtered.length / itemsPerPage), p + 1))}
+                        disabled={couponListPage === Math.ceil(filtered.length / itemsPerPage)}
+                        className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
+                      >
+                        Next →
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setCouponListPage(p => Math.min(Math.ceil(filtered.length / itemsPerPage), p + 1))}
-                      disabled={couponListPage === Math.ceil(filtered.length / itemsPerPage)}
-                      className="px-4 py-2 bg-purple-200 text-purple-900 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-300 transition-colors"
-                    >
-                      Next →
-                    </button>
                   </div>
-                </div>
-              )}
-            )
+                )}
 
-            {!loading && !error && (
-              <p className="mt-3 text-xs text-gray-700">{filtered.length} coupon(s) available</p>
+                {!loading && !error && (
+                  <p className="mt-3 text-xs text-gray-700">{filtered.length} coupon(s) available</p>
+                )}
+              </div>
             )}
           </>
         ) : topTab === 'COUPON' && subTab === 0 ? (
@@ -1540,10 +1600,9 @@ export default function CouponsPage() {
                       }}
                     />
                     <Legend
-                      wrapperStyle={{ paddingTop: '25px' }}
+                      wrapperStyle={{ paddingTop: '25px', fontSize: '13px', fontWeight: 'bold', color: '#1f2937' }}
                       height={35}
                       iconType="rect"
-                      textStyle={{ fontSize: '13px', fontWeight: 'bold', color: '#1f2937' }}
                     />
                     <Bar
                       yAxisId="left"
@@ -1652,10 +1711,9 @@ export default function CouponsPage() {
                       }}
                     />
                     <Legend
-                      wrapperStyle={{ paddingTop: '30px' }}
+                      wrapperStyle={{ paddingTop: '30px', fontSize: '14px', fontWeight: 'bold', color: '#1f2937' }}
                       height={40}
                       iconType="rect"
-                      textStyle={{ fontSize: '14px', fontWeight: 'bold', color: '#1f2937' }}
                     />
                     <Bar
                       dataKey="buyers"
