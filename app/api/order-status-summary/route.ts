@@ -9,29 +9,40 @@ interface OrderStatusRow {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const startDate = searchParams.get('startDate');
-  const endDate = searchParams.get('endDate');
+
+  // Default to current year (Jan 1 - Dec 31)
+  const currentYear = new Date().getFullYear();
+  const defaultStart = `${currentYear}-01-01`;
+  const defaultEnd = `${currentYear}-12-31`;
+
+  const startDate = searchParams.get('startDate') || defaultStart;
+  const endDate = searchParams.get('endDate') || defaultEnd;
 
   try {
-    let sql = `
+    const sql = `
       SELECT
         b."status" AS status,
         COUNT(*) AS count,
-        ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM "purchaseOrder"."purchaseOrder" ${startDate && endDate ? `WHERE "created_at"::date >= $1 AND "created_at"::date <= $2` : 'WHERE "isTest" = FALSE AND "isFalseOrder" = FALSE'}), 2) AS pct
+        ROUND(
+          COUNT(*) * 100.0 / NULLIF((
+            SELECT COUNT(*)
+            FROM "purchaseOrder"."purchaseOrder"
+            WHERE "isTest" = FALSE
+              AND "isFalseOrder" = FALSE
+              AND "created_at"::date >= $1
+              AND "created_at"::date <= $2
+          ), 0),
+        2) AS pct
       FROM "purchaseOrder"."purchaseOrder" b
       WHERE b."isTest" = FALSE
         AND b."isFalseOrder" = FALSE
-        ${startDate && endDate ? `AND b."created_at"::date >= $1 AND b."created_at"::date <= $2` : ''}
+        AND b."created_at"::date >= $1
+        AND b."created_at"::date <= $2
       GROUP BY b."status"
       ORDER BY count DESC;
     `;
 
-    const params: (string | number)[] = [];
-    if (startDate && endDate) {
-      params.push(startDate, endDate);
-    }
-
-    const rows = await query<OrderStatusRow>(sql, params);
+    const rows = await query<OrderStatusRow>(sql, [startDate, endDate]);
 
     const formatted = rows.map(r => ({
       status: r.status,
@@ -42,6 +53,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       data: formatted,
       total: formatted.reduce((sum, row) => sum + row.count, 0),
+      dateRange: { startDate, endDate },
+      year: currentYear,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {

@@ -28,19 +28,23 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function OrderStatusDashboard() {
+  const currentYear = new Date().getFullYear();
+  const yearStart = `${currentYear}-01-01`;
+  const yearEnd = `${currentYear}-12-31`;
+
   const [data, setData] = useState<OrderStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(yearStart);
+  const [endDate, setEndDate] = useState(yearEnd);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = async (start?: string, end?: string) => {
+  const fetchData = async (start: string, end: string) => {
     try {
       setRefreshing(true);
       const params = new URLSearchParams();
-      if (start) params.append('startDate', start);
-      if (end) params.append('endDate', end);
+      params.append('startDate', start);
+      params.append('endDate', end);
 
       const response = await fetch(`/api/order-status-summary?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch data');
@@ -57,7 +61,7 @@ export default function OrderStatusDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(yearStart, yearEnd);
   }, []);
 
   const handleFilter = () => {
@@ -67,9 +71,9 @@ export default function OrderStatusDashboard() {
   };
 
   const handleReset = () => {
-    setStartDate('');
-    setEndDate('');
-    fetchData();
+    setStartDate(yearStart);
+    setEndDate(yearEnd);
+    fetchData(yearStart, yearEnd);
   };
 
   const total = data.reduce((sum, item) => sum + item.count, 0);
@@ -90,7 +94,7 @@ export default function OrderStatusDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Order Status Dashboard</h1>
-          <p className="text-slate-600">Real-time order distribution by status for stakeholder reporting</p>
+          <p className="text-slate-600">Order distribution by status for {currentYear} — stakeholder reporting</p>
         </div>
 
         {/* Filters */}
