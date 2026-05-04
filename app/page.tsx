@@ -1239,7 +1239,7 @@ export default function CouponsPage() {
                             key={coupon.code}
                             className={`khilna-row cursor-pointer transition-colors ${
                               selectedDashboardCode === coupon.code
-                                ? 'bg-purple-200/80 border-l-4 border-purple-600'
+                                ? 'bg-purple-200/80 ring-2 ring-inset ring-purple-600'
                                 : appliedAmountPct >= 15
                                   ? 'bg-red-100/60 hover:bg-red-200/60'
                                   : appliedAmountPct >= 10
@@ -1249,14 +1249,16 @@ export default function CouponsPage() {
                             onClick={() => setSelectedDashboardCode(coupon.code)}
                           >
                             <td
-                              className="px-4 py-3 text-center font-mono font-bold text-purple-700 hover:text-purple-900 hover:underline cursor-pointer"
+                              className="px-4 py-3 text-center cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedOrdersCouponCode(coupon.code);
                               }}
                               title="Click to view orders for this coupon"
                             >
-                              {coupon.code}
+                              <span className="inline-block font-mono font-bold text-purple-700 hover:text-purple-900 hover:underline">
+                                {coupon.code}
+                              </span>
                             </td>
                             <td className="px-4 py-3 text-center text-slate-900 font-medium">{coupon.coupon_name}</td>
                             <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmt(Number(coupon.total_discount_burn))}</td>
