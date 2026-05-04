@@ -367,6 +367,9 @@ export default function CouponsPage() {
   const [couponListPage, setCouponListPage] = useState(1);
   const [topCouponsPage, setTopCouponsPage] = useState(1);
   const [retailerPage, setRetailerPage] = useState(1);
+  const [orderDetailsPage, setOrderDetailsPage] = useState(1);
+  const [violationDetailsPage, setViolationDetailsPage] = useState(1);
+  const [orderDetailsByStatusPage, setOrderDetailsByStatusPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchOffers = useCallback(async () => {
@@ -915,7 +918,8 @@ export default function CouponsPage() {
                         </td>
                       </tr>
                     ) : (
-                      filtered.slice((couponListPage - 1) * itemsPerPage, couponListPage * itemsPerPage).map((o) => (
+                      <>
+                        {filtered.slice((couponListPage - 1) * itemsPerPage, couponListPage * itemsPerPage).map((o) => (
                         <tr key={o.id} className="khilna-row bg-purple-50/30 hover:bg-purple-100/60">
                           <td className="px-4 py-3 font-mono font-bold text-slate-900">
                             <button
@@ -1019,7 +1023,7 @@ export default function CouponsPage() {
                   </div>
                 </div>
               )}
-            )}
+            )
 
             {!loading && !error && (
               <p className="mt-3 text-xs text-gray-700">{filtered.length} coupon(s) available</p>
@@ -1159,7 +1163,7 @@ export default function CouponsPage() {
                         </td>
                       </tr>
                     ) : (
-                      topCoupons.map((coupon) => {
+                      topCoupons.slice((topCouponsPage - 1) * itemsPerPage, topCouponsPage * itemsPerPage).map((coupon) => {
                         const appliedAmountPct = Number(coupon.total_revenue) > 0
                           ? Math.round((Number(coupon.total_discount_burn) / Number(coupon.total_revenue)) * 100)
                           : 0;
@@ -1194,6 +1198,46 @@ export default function CouponsPage() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Pagination Controls for Top Coupons */}
+                {topCoupons.length > itemsPerPage && (
+                  <div className="mt-6 flex items-center justify-between text-sm">
+                    <p className="text-slate-700 font-semibold">
+                      Showing {((topCouponsPage - 1) * itemsPerPage) + 1} - {Math.min(topCouponsPage * itemsPerPage, topCoupons.length)} of {topCoupons.length} coupons
+                    </p>
+                    <div className="flex gap-2 items-center">
+                      <button
+                        onClick={() => setTopCouponsPage(p => Math.max(1, p - 1))}
+                        disabled={topCouponsPage === 1}
+                        className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                      >
+                        ← Previous
+                      </button>
+                      <div className="flex gap-1">
+                        {Array.from({ length: Math.ceil(topCoupons.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            onClick={() => setTopCouponsPage(page)}
+                            className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                              topCouponsPage === page
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-200 text-slate-900 hover:bg-gray-300'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setTopCouponsPage(p => Math.min(Math.ceil(topCoupons.length / itemsPerPage), p + 1))}
+                        disabled={topCouponsPage === Math.ceil(topCoupons.length / itemsPerPage)}
+                        className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2297,7 +2341,7 @@ export default function CouponsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-violet-200">
-                      {orderDetails.map((r, i) => (
+                      {orderDetails.slice((orderDetailsPage - 1) * itemsPerPage, orderDetailsPage * itemsPerPage).map((r, i) => (
                         <tr
                           key={i}
                           onClick={() => setSelectedPoNumber(r.poNumber)}
@@ -2323,6 +2367,46 @@ export default function CouponsPage() {
                       ))}
                     </tbody>
                   </table>
+
+                  {/* Pagination Controls for Order Details */}
+                  {orderDetails.length > itemsPerPage && (
+                    <div className="mt-4 px-4 py-4 bg-gray-50 border-t border-violet-200 flex items-center justify-between text-sm">
+                      <p className="text-slate-700 font-semibold">
+                        Showing {((orderDetailsPage - 1) * itemsPerPage) + 1} - {Math.min(orderDetailsPage * itemsPerPage, orderDetails.length)} of {orderDetails.length} orders
+                      </p>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={() => setOrderDetailsPage(p => Math.max(1, p - 1))}
+                          disabled={orderDetailsPage === 1}
+                          className="px-3 py-2 bg-violet-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-violet-600 font-semibold transition-colors"
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.ceil(orderDetails.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                            <button
+                              key={page}
+                              onClick={() => setOrderDetailsPage(page)}
+                              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                                orderDetailsPage === page
+                                  ? 'bg-violet-600 text-white'
+                                  : 'bg-gray-200 text-slate-900 hover:bg-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setOrderDetailsPage(p => Math.min(Math.ceil(orderDetails.length / itemsPerPage), p + 1))}
+                          disabled={orderDetailsPage === Math.ceil(orderDetails.length / itemsPerPage)}
+                          className="px-3 py-2 bg-violet-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-violet-600 font-semibold transition-colors"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
