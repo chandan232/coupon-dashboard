@@ -221,13 +221,15 @@ export default function CouponOrdersModal({
                         <th className="px-3 py-3 text-left whitespace-nowrap">Buyer Business</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Coupon Applied</th>
                         <th className="px-3 py-3 text-left whitespace-nowrap">Order Created</th>
+                        <th className="px-3 py-3 text-right whitespace-nowrap">Coupon Amount</th>
+                        <th className="px-3 py-3 text-right whitespace-nowrap">Order Amount</th>
                         <th className="px-3 py-3 text-right whitespace-nowrap">Coupon / Order %</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-purple-100">
                       {pageOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="px-4 py-10 text-center text-slate-700 font-medium">
+                          <td colSpan={11} className="px-4 py-10 text-center text-slate-700 font-medium">
                             No applied orders found{search ? ' for current search' : ''}.
                           </td>
                         </tr>
@@ -241,12 +243,9 @@ export default function CouponOrdersModal({
                           <td className="px-3 py-3 text-slate-900 max-w-[200px] truncate" title={o.buyerBusinessName || ''}>{o.buyerBusinessName || '—'}</td>
                           <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.couponAppliedAt)}</td>
                           <td className="px-3 py-3 text-slate-700 whitespace-nowrap text-xs">{fmtDateTime(o.orderCreatedAt)}</td>
-                          <td className="px-3 py-3 text-right font-black text-slate-900 whitespace-nowrap">
-                            {pct(o.couponPctOfOrder)}
-                            <div className="text-[10px] font-medium text-slate-500">
-                              {fmt(o.appliedCouponAmount)} / {fmt(o.orderAmount)}
-                            </div>
-                          </td>
+                          <td className="px-3 py-3 text-right font-bold text-slate-900 whitespace-nowrap">{fmt(o.appliedCouponAmount)}</td>
+                          <td className="px-3 py-3 text-right font-bold text-slate-900 whitespace-nowrap">{fmt(o.orderAmount)}</td>
+                          <td className="px-3 py-3 text-right font-black text-purple-800 whitespace-nowrap">{pct(o.couponPctOfOrder)}</td>
                         </tr>
                       ))}
                     </tbody>
