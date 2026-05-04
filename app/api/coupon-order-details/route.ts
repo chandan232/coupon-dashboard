@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   const endDate = searchParams.get('endDate');
   const status = searchParams.get('status');
   const search = searchParams.get('search');
+  const code = searchParams.get('code');
 
   try {
     let sql = `
@@ -51,6 +52,11 @@ export async function GET(req: NextRequest) {
     if (status) {
       params.push(status);
       sql += ` AND a."status" = $${params.length}`;
+    }
+
+    if (code) {
+      params.push(code);
+      sql += ` AND ofr."code" = $${params.length}`;
     }
 
     if (search) {

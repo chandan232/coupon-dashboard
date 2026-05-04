@@ -8,6 +8,7 @@ import CreateCouponModal from '@/components/CreateCouponModal';
 import CreateVoucherModal from '@/components/CreateVoucherModal';
 import PurchaseOrderItemsModal from '@/components/PurchaseOrderItemsModal';
 import BuyerDetailsModal from '@/components/BuyerDetailsModal';
+import CouponOrdersModal from '@/components/CouponOrdersModal';
 import MetricCard from '@/components/MetricCard';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -393,6 +394,7 @@ export default function CouponsPage() {
   const [vouchersError, setVouchersError] = useState<string | null>(null);
   const [voucherFilterTab, setVoucherFilterTab] = useState(0);
   const [selectedBuyerId, setSelectedBuyerId] = useState<string | null>(null);
+  const [selectedOrdersCouponCode, setSelectedOrdersCouponCode] = useState<string | null>(null);
   const [voucherDashboardData, setVoucherDashboardData] = useState<any>(null);
   const [voucherDashboardLoading, setVoucherDashboardLoading] = useState(false);
   const [voucherDashboardError, setVoucherDashboardError] = useState<string | null>(null);
@@ -1246,7 +1248,16 @@ export default function CouponsPage() {
                             }`}
                             onClick={() => setSelectedDashboardCode(coupon.code)}
                           >
-                            <td className="px-4 py-3 text-center font-mono font-bold text-slate-900 hover:underline">{coupon.code}</td>
+                            <td
+                              className="px-4 py-3 text-center font-mono font-bold text-purple-700 hover:text-purple-900 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrdersCouponCode(coupon.code);
+                              }}
+                              title="Click to view orders for this coupon"
+                            >
+                              {coupon.code}
+                            </td>
                             <td className="px-4 py-3 text-center text-slate-900 font-medium">{coupon.coupon_name}</td>
                             <td className="px-4 py-3 text-center text-slate-900 font-bold">{fmt(Number(coupon.total_discount_burn))}</td>
                             <td className="px-4 py-3 text-center text-slate-900 font-bold">{num(coupon.usage_count)}</td>
@@ -2875,6 +2886,12 @@ export default function CouponsPage() {
         poNumber={selectedPoNumber}
         isOpen={selectedPoNumber !== null}
         onClose={() => setSelectedPoNumber(null)}
+      />
+
+      <CouponOrdersModal
+        couponCode={selectedOrdersCouponCode}
+        isOpen={selectedOrdersCouponCode !== null}
+        onClose={() => setSelectedOrdersCouponCode(null)}
       />
 
     </div>
