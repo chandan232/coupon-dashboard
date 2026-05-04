@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mcp:start": "node lib/mcp-server.js"
   },
   "dependencies": {
     "@types/pg": "^8.20.0",
