@@ -370,6 +370,8 @@ export default function CouponsPage() {
   const [orderDetailsPage, setOrderDetailsPage] = useState(1);
   const [violationDetailsPage, setViolationDetailsPage] = useState(1);
   const [orderDetailsByStatusPage, setOrderDetailsByStatusPage] = useState(1);
+  const [allVouchersPage, setAllVouchersPage] = useState(1);
+  const [filteredVouchersPage, setFilteredVouchersPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchOffers = useCallback(async () => {
@@ -2468,7 +2470,7 @@ export default function CouponsPage() {
                           </td>
                         </tr>
                       ) : (
-                        [...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].map((v) => {
+                        [...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].slice((allVouchersPage - 1) * itemsPerPage, allVouchersPage * itemsPerPage).map((v) => {
                           const now = new Date();
                           const expiryDate = new Date(v.end_time);
                           const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -2533,6 +2535,46 @@ export default function CouponsPage() {
                       )}
                     </tbody>
                   </table>
+
+                  {/* Pagination Controls for All Vouchers */}
+                  {[...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length > itemsPerPage && (
+                    <div className="mt-4 px-4 py-4 bg-gray-50 border-t border-purple-200 flex items-center justify-between text-sm">
+                      <p className="text-slate-700 font-semibold">
+                        Showing {((allVouchersPage - 1) * itemsPerPage) + 1} - {Math.min(allVouchersPage * itemsPerPage, [...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length)} of {[...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length} vouchers
+                      </p>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={() => setAllVouchersPage(p => Math.max(1, p - 1))}
+                          disabled={allVouchersPage === 1}
+                          className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.ceil([...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                            <button
+                              key={page}
+                              onClick={() => setAllVouchersPage(page)}
+                              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                                allVouchersPage === page
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-gray-200 text-slate-900 hover:bg-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setAllVouchersPage(p => Math.min(Math.ceil([...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length / itemsPerPage), p + 1))}
+                          disabled={allVouchersPage === Math.ceil([...activeVouchers, ...scheduledVouchers, ...inactiveVouchers].length / itemsPerPage)}
+                          className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2605,7 +2647,7 @@ export default function CouponsPage() {
                           </td>
                         </tr>
                       ) : (
-                        displayVouchers.map((v) => (
+                        displayVouchers.slice((filteredVouchersPage - 1) * itemsPerPage, filteredVouchersPage * itemsPerPage).map((v) => (
                         <tr key={v.id} className="khilna-row bg-purple-50/30 hover:bg-purple-100/60 transition-colors">
                           <td className="px-4 py-3 font-mono font-bold text-purple-700">{v.code}</td>
                           <td className="px-4 py-3 font-semibold text-slate-900">{v.coupon_name}</td>
@@ -2680,6 +2722,52 @@ export default function CouponsPage() {
                     })()}
                   </tbody>
                 </table>
+
+                {/* Pagination Controls for Filtered Vouchers */}
+                {(() => {
+                  const displayVouchers =
+                    voucherFilterTab === 0 ? activeVouchers :
+                    voucherFilterTab === 1 ? scheduledVouchers :
+                    inactiveVouchers;
+                  return displayVouchers.length > itemsPerPage ? (
+                    <div className="mt-4 px-4 py-4 bg-gray-50 border-t border-purple-200 flex items-center justify-between text-sm">
+                      <p className="text-slate-700 font-semibold">
+                        Showing {((filteredVouchersPage - 1) * itemsPerPage) + 1} - {Math.min(filteredVouchersPage * itemsPerPage, displayVouchers.length)} of {displayVouchers.length} vouchers
+                      </p>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={() => setFilteredVouchersPage(p => Math.max(1, p - 1))}
+                          disabled={filteredVouchersPage === 1}
+                          className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                        >
+                          ← Previous
+                        </button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.ceil(displayVouchers.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+                            <button
+                              key={page}
+                              onClick={() => setFilteredVouchersPage(page)}
+                              className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                                filteredVouchersPage === page
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-gray-200 text-slate-900 hover:bg-gray-300'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setFilteredVouchersPage(p => Math.min(Math.ceil(displayVouchers.length / itemsPerPage), p + 1))}
+                          disabled={filteredVouchersPage === Math.ceil(displayVouchers.length / itemsPerPage)}
+                          className="px-3 py-2 bg-purple-500 text-white rounded-lg disabled:bg-gray-300 hover:bg-purple-600 font-semibold transition-colors"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
               </div>
             )}
           </>
