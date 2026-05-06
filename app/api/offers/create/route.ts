@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       code,
       JSON.stringify(discountDetails),
       JSON.stringify(metaDetails),
-      JSON.stringify({}), // budgetDistribution - empty object
+      JSON.stringify({ platform: 100 }), // budgetDistribution: 100% borne by the platform
       minimumOrderValue,
       maxUsageCount,
       maxUsagePerUser,
