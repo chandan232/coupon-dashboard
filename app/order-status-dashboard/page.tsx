@@ -139,28 +139,20 @@ export default function OrderStatusDashboard() {
         {/* Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <MetricCard
-            title="Total Orders"
+            label="📊 Total Orders"
             value={total.toLocaleString()}
-            trend={0}
-            icon="📊"
           />
           <MetricCard
-            title="Unique Statuses"
+            label="🏷️ Unique Statuses"
             value={data.length}
-            trend={0}
-            icon="🏷️"
           />
           <MetricCard
-            title="Success Rate"
+            label="✅ Success Rate"
             value={`${data.find(d => d.status === 'DELIVERED' || d.status === 'COMPLETED')?.percentage || 0}%`}
-            trend={0}
-            icon="✅"
           />
           <MetricCard
-            title="Failure Rate"
+            label="❌ Failure Rate"
             value={`${data.find(d => d.status === 'FAILED' || d.status === 'REJECTED')?.percentage || 0}%`}
-            trend={0}
-            icon="❌"
           />
         </div>
 
@@ -207,13 +199,14 @@ export default function OrderStatusDashboard() {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ status, percentage }) => `${status}: ${percentage}%`}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    label={(props: any) => `${props.status}: ${props.percentage}%`}
                   >
                     {data.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.status] || '#3b82f6'} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                  <Tooltip formatter={(value) => Number(value).toLocaleString()} />
                 </PieChart>
               </ResponsiveContainer>
             )}

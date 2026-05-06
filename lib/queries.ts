@@ -30,8 +30,10 @@ SELECT
   "code",
   "code"                               AS coupon_name,
   CASE
-    WHEN "isActive" = true AND "expiryTime" > NOW() THEN 'LIVE'
-    WHEN "activationTime" > NOW() THEN 'SCHEDULED'
+    -- SCHEDULED first: a coupon with a future activationTime is scheduled,
+    -- regardless of whether isActive=true (isActive=true just means "not deactivated")
+    WHEN "isActive" = true AND "activationTime" > NOW() AND "expiryTime" > NOW() THEN 'SCHEDULED'
+    WHEN "isActive" = true AND "activationTime" <= NOW() AND "expiryTime" > NOW() THEN 'LIVE'
     ELSE 'INACTIVE'
   END                                   AS offer_status,
   "discountDetails"->>'type'           AS discount_type,

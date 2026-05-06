@@ -2865,7 +2865,16 @@ export default function CouponsPage() {
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
           setShowCreateModal(false);
+          // Navigate to the Coupon list → Scheduled filter so the freshly
+          // created coupon (which always has a future activationTime by
+          // the time the modal closes) is visible on the right tab.
+          setTopTab('COUPON');
+          setSubTab(3); // 'Coupon' sub-tab in SUB_TABS_COUPON
+          setCouponFilterTab(1); // SCHEDULED filter
+          setCouponListPage(1); // Newest coupon is on page 1 (ORDER BY created_at DESC)
+          // Refresh both the offers list and the dashboard metrics
           fetchOffers();
+          fetchDashboardData();
         }}
       />
 
@@ -2874,7 +2883,15 @@ export default function CouponsPage() {
         onClose={() => setShowCreateVoucherModal(false)}
         onSuccess={() => {
           setShowCreateVoucherModal(false);
+          // Navigate to the Voucher list so the new voucher is visible
+          setTopTab('VOUCHER');
+          setSubTab(1); // 'Voucher' sub-tab in SUB_TABS_VOUCHER
+          setVoucherFilterTab(0); // Active filter
+          setAllVouchersPage(1);
+          setFilteredVouchersPage(1);
+          // Refresh both lists
           fetchVouchers();
+          fetchVoucherDashboard();
         }}
       />
 
