@@ -574,17 +574,17 @@ export default function CouponsPage() {
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error || `Failed to ${action}`);
 
-      setOffers(prev =>
-        prev.map(o =>
-          o.id === offerId
-            ? {
-                ...o,
-                isTest: isCurrentlyActive ? true : false,
-                isActive: isCurrentlyActive ? false : true,
-              }
-            : o
-        )
-      );
+      // Refetch from the server so offer_status (LIVE / SCHEDULED / INACTIVE)
+      // is recomputed correctly for the row that was just toggled.
+      // Optimistic-only updates of isTest/isActive don't change offer_status,
+      // so the row would otherwise stay on the same filter tab.
+      await fetchOffers();
+      fetchDashboardData();
+
+      // Switch the user to the tab where the toggled coupon now lives so
+      // they can immediately see the result of their action.
+      setCouponFilterTab(isCurrentlyActive ? 2 : 0); // 2 = Inactive, 0 = Live
+      setCouponListPage(1);
     } catch (e) {
       alert(e instanceof Error ? e.message : `Failed to ${action} coupon`);
     }
