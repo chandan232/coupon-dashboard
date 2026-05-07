@@ -37,7 +37,9 @@ export default function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-black tracking-tight text-purple-950">badho</span>
-            <span className="text-xs font-bold text-purple-600">COUPON HQ 💜</span>
+            <span className="text-xs font-bold text-purple-600">
+              {path?.startsWith('/order-status-dashboard') ? 'ORDERS HQ 📦' : 'COUPON HQ 💜'}
+            </span>
           </div>
         </div>
         <div className="flex gap-6 ml-auto items-center">

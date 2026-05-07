@@ -20,25 +20,28 @@ export async function GET(req: NextRequest) {
 
   try {
     const sql = `
+      WITH filtered AS (
+        SELECT po."status"
+        FROM "purchaseOrder"."purchaseOrder" po
+        JOIN "users"."buyer" b ON b."id" = po."buyerId"
+        JOIN "users"."seller" s ON s."id" = po."sellerId"
+        WHERE po."isTest" = FALSE
+          AND po."isFalseOrder" = FALSE
+          AND b."isTest" = FALSE
+          AND b."businessName" NOT ILIKE '%test%'
+          AND s."isTest" = FALSE
+          AND s."businessName" NOT ILIKE '%test%'
+          AND s."isD2RBrandSeller" = TRUE
+          AND po."status" != 'DRAFT'
+          AND po."created_at"::date >= $1
+          AND po."created_at"::date <= $2
+      )
       SELECT
-        b."status" AS status,
+        "status" AS status,
         COUNT(*) AS count,
-        ROUND(
-          COUNT(*) * 100.0 / NULLIF((
-            SELECT COUNT(*)
-            FROM "purchaseOrder"."purchaseOrder"
-            WHERE "isTest" = FALSE
-              AND "isFalseOrder" = FALSE
-              AND "created_at"::date >= $1
-              AND "created_at"::date <= $2
-          ), 0),
-        2) AS pct
-      FROM "purchaseOrder"."purchaseOrder" b
-      WHERE b."isTest" = FALSE
-        AND b."isFalseOrder" = FALSE
-        AND b."created_at"::date >= $1
-        AND b."created_at"::date <= $2
-      GROUP BY b."status"
+        ROUND(COUNT(*) * 100.0 / NULLIF((SELECT COUNT(*) FROM filtered), 0), 2) AS pct
+      FROM filtered
+      GROUP BY "status"
       ORDER BY count DESC;
     `;
 
