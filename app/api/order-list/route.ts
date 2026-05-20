@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'; // Force Vercel rebuild - AWB columns deployment v2
 
 interface Row {
   po_number: string;
