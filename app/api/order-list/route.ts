@@ -16,6 +16,9 @@ interface Row {
   buyer_state: string | null;
   marked_pending_time: string | null;
   created_at: string;
+  awb_number: string | null;
+  delivery_network: string | null;
+  pushed_status: string;
 }
 
 export async function GET(req: NextRequest) {
@@ -53,10 +56,14 @@ export async function GET(req: NextRequest) {
         b."city"                     AS buyer_city,
         b."state"                    AS buyer_state,
         po."markedPendingTime"       AS marked_pending_time,
-        po."created_at"              AS created_at
+        po."created_at"              AS created_at,
+        COALESCE(d."trackingInfo"->>'awbNumber', d."networkOrderDetails"->>'awbNumber') AS awb_number,
+        COALESCE(d."trackingInfo"->>'courierName', d."networkOrderDetails"->>'logistic_name', d."deliveryPartnerId") AS delivery_network,
+        CASE WHEN d."id" IS NOT NULL THEN 'Pushed' ELSE 'Not Pushed' END AS pushed_status
       FROM "purchaseOrder"."purchaseOrder" po
       JOIN "users"."buyer" b ON b."id" = po."buyerId"
       JOIN "users"."seller" s ON s."id" = po."sellerId"
+      LEFT JOIN "deliveries"."intercityDelivery" d ON d."purchaseOrderId" = po."id"
       WHERE po."isTest" = FALSE
         AND po."isFalseOrder" = FALSE
         AND b."isTest" = FALSE
@@ -86,6 +93,9 @@ export async function GET(req: NextRequest) {
       buyerState: r.buyer_state,
       markedPendingTime: r.marked_pending_time,
       createdAt: r.created_at,
+      awbNumber: r.awb_number,
+      deliveryNetwork: r.delivery_network,
+      pushedStatus: r.pushed_status,
     }));
 
     return NextResponse.json({

@@ -27,6 +27,9 @@ interface OrderListRow {
   buyerState: string | null;
   markedPendingTime: string | null;
   createdAt: string;
+  awbNumber: string | null;
+  deliveryNetwork: string | null;
+  pushedStatus: string;
 }
 
 interface RevenueGoal {
@@ -85,6 +88,9 @@ interface SellerOrderRow {
   buyerBusinessName: string | null;
   markedPendingTime: string | null;
   createdAt: string;
+  awbNumber: string | null;
+  deliveryNetwork: string | null;
+  pushedStatus: string;
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -1130,6 +1136,9 @@ export default function OrderStatusDashboard() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">PO Number</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
                         <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Amount</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">AWB Number</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Delivery Network</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Pushed Status</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Phone</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Business</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Marked Pending</th>
@@ -1152,6 +1161,13 @@ export default function OrderStatusDashboard() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right text-slate-900 tabular-nums">₹{r.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-slate-700 tabular-nums">{r.awbNumber || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.deliveryNetwork || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${r.pushedStatus === 'Pushed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                              {r.pushedStatus}
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-slate-700 tabular-nums">{r.buyerPhone || '—'}</td>
                           <td className="px-4 py-3 text-slate-700">{r.buyerBusinessName || '—'}</td>
                           <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.markedPendingTime)}</td>
@@ -1245,6 +1261,9 @@ export default function OrderStatusDashboard() {
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">PO Number</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
                         <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Amount</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">AWB Number</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Delivery Network</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Pushed Status</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Phone</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Business</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Seller Phone</th>
@@ -1261,6 +1280,13 @@ export default function OrderStatusDashboard() {
                           <td className="px-4 py-3 text-slate-900 tabular-nums font-medium">{r.poNumber}</td>
                           <td className="px-4 py-3 text-slate-700">{r.status}</td>
                           <td className="px-4 py-3 text-right text-slate-900 tabular-nums">₹{r.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-slate-700 tabular-nums">{r.awbNumber || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.deliveryNetwork || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${r.pushedStatus === 'Pushed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                              {r.pushedStatus}
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-slate-700">{r.buyerPhone || '—'}</td>
                           <td className="px-4 py-3 text-slate-700">{r.buyerBusinessName || '—'}</td>
                           <td className="px-4 py-3 text-slate-700">{r.sellerPhone || '—'}</td>
