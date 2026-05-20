@@ -95,15 +95,47 @@ export async function GET(req: NextRequest) {
       totals.grand.amount += amount;
     }
 
+    // Create a special "SLA Breach" parent that combines both SLA breach types
+    const slaBreachParent = {
+      'SLA Breach|Brand SLA Breach': statusMap['REJECTED|Brand SLA Breach'] || {},
+      'SLA Breach|Delivery Partner SLA Breach': statusMap['REJECTED|Delivery Partner SLA Breach'] || {},
+    };
+
+    // Move SLA breach categories to SLA Breach parent and update totals
+    Object.keys(slaBreachParent).forEach(newKey => {
+      const oldKey = newKey.replace('SLA Breach', 'REJECTED');
+      statusMap[newKey] = slaBreachParent[newKey];
+      totals.byStatus[newKey] = totals.byStatus[oldKey];
+      delete totals.byStatus[oldKey];
+    });
+    delete statusMap['REJECTED|Brand SLA Breach'];
+    delete statusMap['REJECTED|Delivery Partner SLA Breach'];
+
     const statusKeys = Object.keys(statusMap).sort((a, b) => {
-      // Sort by base status first, then by count within that status
-      const aBase = a.split('|')[0];
-      const bBase = b.split('|')[0];
-      if (aBase !== bBase) {
-        // Custom status order
-        const statusOrder = ['REJECTED', 'COMPLETED', 'DISPATCHED', 'INPROGRESS', 'PENDING'];
-        return statusOrder.indexOf(aBase) - statusOrder.indexOf(bBase);
+      // Custom status order with SLA Breach and RTO at top
+      const statusOrder = [
+        'SLA Breach|Brand SLA Breach',
+        'SLA Breach|Delivery Partner SLA Breach',
+        'REJECTED|RTO',
+        'REJECTED|Other Reasons',
+        'REJECTED|Serviceability Issue',
+        'REJECTED|Address Issue',
+        'COMPLETED',
+        'DISPATCHED',
+        'INPROGRESS',
+        'PENDING',
+        'CANCELLED',
+      ];
+
+      const aIndex = statusOrder.indexOf(a);
+      const bIndex = statusOrder.indexOf(b);
+
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
       }
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+
       return totals.byStatus[b].count - totals.byStatus[a].count;
     });
 
