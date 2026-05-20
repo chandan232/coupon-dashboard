@@ -165,6 +165,7 @@ export default function OrderStatusDashboard() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'seller' | 'demography' | 'rto'>('dashboard');
   const [drillStatus, setDrillStatus] = useState<string | null>(null);
   const [drillMonth, setDrillMonth] = useState<number | null>(null);
+  const [drillReasonCategory, setDrillReasonCategory] = useState<string | null>(null);
   const [drillRows, setDrillRows] = useState<OrderListRow[] | null>(null);
   const [drillLoading, setDrillLoading] = useState(false);
   const [drillError, setDrillError] = useState<string | null>(null);
@@ -266,6 +267,7 @@ export default function OrderStatusDashboard() {
   const openDrill = async (status: string, month: number | null, reasonCategory?: string | null) => {
     setDrillStatus(status);
     setDrillMonth(month);
+    setDrillReasonCategory(reasonCategory || null);
     setDrillRows(null);
     setDrillError(null);
     setDrillSearch('');
@@ -288,6 +290,7 @@ export default function OrderStatusDashboard() {
   const closeDrill = () => {
     setDrillStatus(null);
     setDrillMonth(null);
+    setDrillReasonCategory(null);
     setDrillRows(null);
     setDrillError(null);
     setDrillSearch('');
@@ -1442,7 +1445,7 @@ export default function OrderStatusDashboard() {
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                 <div>
                   <h3 className="text-xl font-semibold text-slate-900">
-                    {drillStatus} — {drillMonth ? `${MONTH_NAMES[drillMonth - 1]} ${currentYear}` : `${currentYear} (all months)`}
+                    {drillStatus}{drillReasonCategory ? ` — ${drillReasonCategory}` : ''} — {drillMonth ? `${MONTH_NAMES[drillMonth - 1]} ${currentYear}` : `${currentYear} (all months)`}
                   </h3>
                   <p className="text-slate-500 text-sm mt-1">
                     {drillLoading
