@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
   const year = parseInt(searchParams.get('year') || String(currentYear));
   const monthParam = searchParams.get('month');
   const status = searchParams.get('status');
+  const reasonCategory = searchParams.get('reasonCategory');
 
   if (!status) {
     return NextResponse.json({ error: 'status parameter required' }, { status: 400 });
@@ -44,11 +45,29 @@ export async function GET(req: NextRequest) {
   try {
     const params: (string | number)[] = [status, year];
     let monthFilter = '';
+    let reasonFilter = '';
+
     if (monthParam) {
       const month = parseInt(monthParam);
       if (!Number.isNaN(month) && month >= 1 && month <= 12) {
         params.push(month);
         monthFilter = ` AND EXTRACT(MONTH FROM po."created_at") = $${params.length}`;
+      }
+    }
+
+    if (reasonCategory) {
+      if (reasonCategory === 'RTO') {
+        reasonFilter = ` AND po."deliveryStatus" = 'RTO'`;
+      } else if (reasonCategory === 'Brand SLA Breach') {
+        reasonFilter = ` AND (COALESCE(po."rejectReason", '') ILIKE '%AUTO REJECTED DUE TO SLA BREACH%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%AUTO REJECTED DUE TO SLA BREACH%')`;
+      } else if (reasonCategory === 'Delivery Partner SLA Breach') {
+        reasonFilter = ` AND EXISTS (SELECT 1 FROM "deliveries"."intercityDelivery" di WHERE di."purchaseOrderId" = po."id" AND di."status" = 'NOT PICKED' AND di."autoRejectionTime" IS NOT NULL)`;
+      } else if (reasonCategory === 'Serviceability Issue') {
+        reasonFilter = ` AND (COALESCE(po."rejectReason", '') ILIKE '%serviceab%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%serviceab%')`;
+      } else if (reasonCategory === 'Address Issue') {
+        reasonFilter = ` AND (COALESCE(po."rejectReason", '') ILIKE '%address%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%address%')`;
+      } else if (reasonCategory === 'Other Reasons') {
+        reasonFilter = ` AND po."deliveryStatus" != 'RTO' AND NOT (COALESCE(po."rejectReason", '') ILIKE '%AUTO REJECTED DUE TO SLA BREACH%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%AUTO REJECTED DUE TO SLA BREACH%') AND NOT (COALESCE(po."rejectReason", '') ILIKE '%serviceab%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%serviceab%') AND NOT (COALESCE(po."rejectReason", '') ILIKE '%address%' OR COALESCE(po."reasonAddedByBadhoTeam", '') ILIKE '%address%') AND NOT EXISTS (SELECT 1 FROM "deliveries"."intercityDelivery" di WHERE di."purchaseOrderId" = po."id" AND di."status" = 'NOT PICKED' AND di."autoRejectionTime" IS NOT NULL)`;
       }
     }
 
@@ -98,6 +117,7 @@ export async function GET(req: NextRequest) {
         AND EXTRACT(YEAR FROM po."created_at") = $2
         AND po."status" = $1
         ${monthFilter}
+        ${reasonFilter}
       ORDER BY "MarkedpendingTime" DESC NULLS LAST
       LIMIT 5000;
     `;
