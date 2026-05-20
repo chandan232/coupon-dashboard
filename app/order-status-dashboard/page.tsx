@@ -1617,7 +1617,7 @@ export default function OrderStatusDashboard() {
                   {rtoData.data.map((row, rowIdx) => (
                     <tr key={rowIdx} className={`border-b border-white/5 ${rowIdx % 2 === 0 ? 'bg-white/2' : ''}`}>
                       <td className="px-4 py-3 text-left font-semibold text-white/90">
-                        {row.status}
+                        {row.reasonCategory}
                       </td>
                       {MONTH_NAMES.map((_, monthIdx) => {
                         const monthNum = monthIdx + 1;
@@ -1625,19 +1625,31 @@ export default function OrderStatusDashboard() {
                         const hasData = !!monthCell;
                         return (
                           <Fragment key={monthIdx}>
-                            <td className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${hasData ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}>
+                            <td
+                              onClick={() => hasData && openDrill('REJECTED', monthNum, row.reasonCategory)}
+                              className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${hasData ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                            >
                               {hasData ? monthCell.count : '—'}
                             </td>
-                            <td className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${hasData ? 'text-purple-100 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}>
+                            <td
+                              onClick={() => hasData && openDrill('REJECTED', monthNum, row.reasonCategory)}
+                              className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${hasData ? 'text-purple-100 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                            >
                               {hasData ? formatAmount(monthCell.amount) : '—'}
                             </td>
                           </Fragment>
                         );
                       })}
-                      <td className={`px-2 py-3 text-right tabular-nums font-bold text-white bg-purple-500/10 border-r border-white/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}>
+                      <td
+                        onClick={() => openDrill('REJECTED', null, row.reasonCategory)}
+                        className={`px-2 py-3 text-right tabular-nums font-bold text-white bg-purple-500/10 border-r border-white/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}
+                      >
                         {row.total.count}
                       </td>
-                      <td className={`px-2 py-3 text-right tabular-nums font-bold text-purple-100 bg-purple-500/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}>
+                      <td
+                        onClick={() => openDrill('REJECTED', null, row.reasonCategory)}
+                        className={`px-2 py-3 text-right tabular-nums font-bold text-purple-100 bg-purple-500/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}
+                      >
                         {formatAmount(row.total.amount)}
                       </td>
                     </tr>
