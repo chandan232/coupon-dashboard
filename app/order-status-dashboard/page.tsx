@@ -167,6 +167,10 @@ export default function OrderStatusDashboard() {
   const [endDate, setEndDate] = useState(yearEnd);
   const [refreshing, setRefreshing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [orderDetailPo, setOrderDetailPo] = useState<string | null>(null);
+  const [orderDetail, setOrderDetail] = useState<Record<string, unknown> | null>(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [orderDetailError, setOrderDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -275,6 +279,29 @@ export default function OrderStatusDashboard() {
     setDrillRows(null);
     setDrillError(null);
     setDrillSearch('');
+  };
+
+  const openOrderDetail = async (poNumber: string) => {
+    setOrderDetailPo(poNumber);
+    setOrderDetail(null);
+    setOrderDetailError(null);
+    setOrderDetailLoading(true);
+    try {
+      const res = await fetch(`/api/order-details?poNumber=${encodeURIComponent(poNumber)}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to fetch');
+      setOrderDetail(json);
+    } catch (err) {
+      setOrderDetailError(err instanceof Error ? err.message : 'Error loading order details');
+    } finally {
+      setOrderDetailLoading(false);
+    }
+  };
+
+  const closeOrderDetail = () => {
+    setOrderDetailPo(null);
+    setOrderDetail(null);
+    setOrderDetailError(null);
   };
 
   const filteredDrillRows = (() => {
@@ -1206,6 +1233,181 @@ export default function OrderStatusDashboard() {
           </div>
         )}
 
+        {/* Order Detail Modal */}
+        {orderDetailPo !== null && (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+            onClick={closeOrderDetail}
+          >
+            <div
+              className="bg-white text-slate-900 border border-slate-200 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-blue-50">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Order Details</h3>
+                  <p className="text-slate-500 text-sm mt-1">PO: {orderDetailPo}</p>
+                </div>
+                <button
+                  onClick={closeOrderDetail}
+                  className="px-3 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto">
+                {orderDetailLoading ? (
+                  <div className="px-6 py-12 text-center text-slate-500">Loading order details...</div>
+                ) : orderDetailError ? (
+                  <div className="px-6 py-12 text-center text-rose-600">{orderDetailError}</div>
+                ) : !orderDetail ? (
+                  <div className="px-6 py-12 text-center text-slate-500">No details found</div>
+                ) : (
+                  <div className="p-6 grid grid-cols-2 gap-6">
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Order Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">PO Number</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.poNumber || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Status</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.orderStatus || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">PO Amount</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.poAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Marked Pending Time</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.MarkedpendingTime || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Payment Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Payment Date</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.paymentDate ? new Date(orderDetail.paymentDate as string).toLocaleDateString() : '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Payment Event</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.paymentEvent || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Paid Amount</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.paidAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Payment Mode</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.paymentMode || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Seller Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Seller Name</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.sellerBusinessName || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Seller Phone</p>
+                          <p className="text-sm font-medium text-slate-900 tabular-nums">{orderDetail.sellerPhone || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Discount By Seller</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.discountBySeller || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Buyer Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Buyer Name</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.buyerBusinessName || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Buyer Phone</p>
+                          <p className="text-sm font-medium text-slate-900 tabular-nums">{orderDetail.buyerPhone || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Delivery Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">AWB Number</p>
+                          <p className="text-sm font-medium text-slate-900 tabular-nums">{orderDetail.awbNumber || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Courier Name</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.courierName || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Delivery Status</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.deliveryStatus || '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Discount & Applied Amounts</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Coupon Applied</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.CoupanApplied || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Discount By Badho</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.discountByBadho || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Applied Wallet Amount</p>
+                          <p className="text-sm font-medium text-slate-900">₹{Number(orderDetail.appliedWalletAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Refund Information</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Refund Initiated</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.RefundIntiatedTime ? new Date(orderDetail.RefundIntiatedTime as string).toLocaleString() : '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Refund Completed</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.RefundCompletedTime ? new Date(orderDetail.RefundCompletedTime as string).toLocaleString() : '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 uppercase tracking-wide">Refund Completed In (Minutes)</p>
+                          <p className="text-sm font-medium text-slate-900">{orderDetail.RefundCompletedInMin ? Number(orderDetail.RefundCompletedInMin).toLocaleString() : '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {orderDetail.rejectReason && (
+                      <div className="col-span-2">
+                        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">Reject Reason</h4>
+                        <p className="text-sm text-slate-900 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{orderDetail.rejectReason}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Drilldown Modal */}
         {drillStatus !== null && (
           <div
@@ -1276,7 +1478,7 @@ export default function OrderStatusDashboard() {
                     </thead>
                     <tbody>
                       {(drillPaged?.rows || filteredDrillRows).map((r) => (
-                        <tr key={r.poNumber} className="border-b border-slate-100 hover:bg-slate-50">
+                        <tr key={r.poNumber} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => openOrderDetail(r.poNumber)}>
                           <td className="px-4 py-3 text-slate-900 tabular-nums font-medium">{r.poNumber}</td>
                           <td className="px-4 py-3 text-slate-700">{r.status}</td>
                           <td className="px-4 py-3 text-right text-slate-900 tabular-nums">₹{r.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
