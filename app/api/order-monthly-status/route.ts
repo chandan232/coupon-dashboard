@@ -95,27 +95,47 @@ export async function GET(req: NextRequest) {
       totals.grand.amount += amount;
     }
 
-    // Create a special "SLA Breach" parent that combines both SLA breach types
-    const slaBreachParent = {
-      'SLA Breach|Brand SLA Breach': statusMap['REJECTED|Brand SLA Breach'] || {},
-      'SLA Breach|Delivery Partner SLA Breach': statusMap['REJECTED|Delivery Partner SLA Breach'] || {},
+    // Combine both SLA breach types into a single "SLA Breach" row
+    const slaBreachMonths: Record<number, { count: number; amount: number }> = {};
+    const brandSLAKey = 'REJECTED|Brand SLA Breach';
+    const deliveryPartnerSLAKey = 'REJECTED|Delivery Partner SLA Breach';
+
+    // Combine months data
+    const brandSLAMonths = statusMap[brandSLAKey] || {};
+    const deliveryPartnerSLAMonths = statusMap[deliveryPartnerSLAKey] || {};
+
+    for (let m = 1; m <= 12; m++) {
+      const brandData = brandSLAMonths[m] || { count: 0, amount: 0 };
+      const deliveryData = deliveryPartnerSLAMonths[m] || { count: 0, amount: 0 };
+      if (brandData.count > 0 || deliveryData.count > 0) {
+        slaBreachMonths[m] = {
+          count: brandData.count + deliveryData.count,
+          amount: brandData.amount + deliveryData.amount,
+        };
+      }
+    }
+
+    // Create combined SLA Breach row
+    statusMap['SLA Breach'] = slaBreachMonths;
+
+    // Combine totals for SLA Breach
+    const brandSLATotal = totals.byStatus[brandSLAKey] || { count: 0, amount: 0 };
+    const deliveryPartnerSLATotal = totals.byStatus[deliveryPartnerSLAKey] || { count: 0, amount: 0 };
+    totals.byStatus['SLA Breach'] = {
+      count: brandSLATotal.count + deliveryPartnerSLATotal.count,
+      amount: brandSLATotal.amount + deliveryPartnerSLATotal.amount,
     };
 
-    // Move SLA breach categories to SLA Breach parent and update totals
-    Object.keys(slaBreachParent).forEach(newKey => {
-      const oldKey = newKey.replace('SLA Breach', 'REJECTED');
-      statusMap[newKey] = slaBreachParent[newKey];
-      totals.byStatus[newKey] = totals.byStatus[oldKey];
-      delete totals.byStatus[oldKey];
-    });
-    delete statusMap['REJECTED|Brand SLA Breach'];
-    delete statusMap['REJECTED|Delivery Partner SLA Breach'];
+    // Remove individual SLA breach entries
+    delete statusMap[brandSLAKey];
+    delete statusMap[deliveryPartnerSLAKey];
+    delete totals.byStatus[brandSLAKey];
+    delete totals.byStatus[deliveryPartnerSLAKey];
 
     const statusKeys = Object.keys(statusMap).sort((a, b) => {
-      // Custom status order with SLA Breach and RTO at top
+      // Custom status order: SLA Breach → RTO → REJECTED (rest) → COMPLETED → DISPATCH → others
       const statusOrder = [
-        'SLA Breach|Brand SLA Breach',
-        'SLA Breach|Delivery Partner SLA Breach',
+        'SLA Breach',
         'REJECTED|RTO',
         'REJECTED|Other Reasons',
         'REJECTED|Serviceability Issue',

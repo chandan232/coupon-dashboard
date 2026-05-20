@@ -138,7 +138,10 @@ const STATUS_ICONS: Record<string, string> = {
 };
 
 export default function OrderStatusDashboard() {
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
+  const currentMonthYear = `${currentMonth} ${currentYear}`;
   const yearStart = `${currentYear}-01-01`;
   const yearEnd = `${currentYear}-12-31`;
 
@@ -516,7 +519,7 @@ export default function OrderStatusDashboard() {
         {/* Revenue Goal — radial gauge */}
         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden mb-8 transition-all duration-300 hover:bg-white/10 hover:border-fuchsia-400/50 hover:shadow-[0_0_50px_rgba(217,70,239,0.25),inset_0_0_30px_rgba(168,85,247,0.12)]">
           <div className="px-8 py-6 border-b border-white/10">
-            <h2 className="text-2xl font-bold text-white">GMV Goal — {currentYear}</h2>
+            <h2 className="text-2xl font-bold text-white">GMV Goal — {currentMonthYear}</h2>
             <p className="text-white/60 text-sm mt-1">Sum of order amount where status is DELIVERED or COMPLETED, against a ₹1 Cr goal</p>
           </div>
           <div className="p-8">
@@ -559,7 +562,7 @@ export default function OrderStatusDashboard() {
                       <p className="text-white/50 text-xs mt-1">{goalData.orders.toLocaleString()} orders</p>
                     </div>
                     <div className="bg-white/5 border border-white/10 rounded-xl p-5 transition-all duration-300 hover:bg-white/15 hover:border-fuchsia-400/50 hover:shadow-[0_0_30px_rgba(217,70,239,0.3)] hover:scale-[1.02]">
-                      <p className="text-white/60 text-xs uppercase tracking-wider mb-2">Goal</p>
+                      <p className="text-white/60 text-xs uppercase tracking-wider mb-2">{currentMonth} Goal</p>
                       <p className="text-3xl font-bold text-white tabular-nums">{formatAmount(goalData.goal)}</p>
                       <p className="text-white/50 text-xs mt-1">DELIVERED + COMPLETED</p>
                     </div>
@@ -650,33 +653,33 @@ export default function OrderStatusDashboard() {
                 </thead>
                 <tbody>
                   {monthlyData.data.map((row) => {
-                    const isSLAParent = row.status === 'SLA Breach' && !row.reasonCategory;
-                    const isSLAChild = row.status === 'SLA Breach' && row.reasonCategory;
+                    const isSLABreach = row.status === 'SLA Breach';
                     const isRTO = row.reasonCategory === 'RTO';
-                    const isRejectedChild = row.status === 'REJECTED' && row.reasonCategory;
+                    const isClickable = !isSLABreach && !isRTO;
+                    const displayLabel = row.status === 'REJECTED' && row.reasonCategory
+                      ? `REJECTED (${row.reasonCategory})`
+                      : row.status;
 
                     return (
-                      <tr key={`${row.status}${row.reasonCategory ? '-' + row.reasonCategory : ''}`} className={`border-b border-white/5 hover:bg-white/10 transition-colors group ${isSLAChild || isRejectedChild ? 'bg-white/2' : ''}`}>
-                        <td className={`px-4 py-3 sticky left-0 backdrop-blur z-10 border-r border-white/10 group-hover:bg-slate-800/90 text-sm font-medium ${isSLAParent ? 'bg-slate-900/80 text-white font-bold' : isSLAChild || isRejectedChild ? 'bg-slate-950/60 text-purple-200 pl-8' : 'bg-slate-900/80 text-white'}`}>
-                          {isSLAChild || isRejectedChild ? `↳ ${row.reasonCategory}` : row.status}
+                      <tr key={`${row.status}${row.reasonCategory ? '-' + row.reasonCategory : ''}`} className={`border-b border-white/5 hover:bg-white/10 transition-colors group`}>
+                        <td className={`px-4 py-3 sticky left-0 backdrop-blur z-10 border-r border-white/10 group-hover:bg-slate-800/90 text-sm font-medium bg-slate-900/80 text-white`}>
+                          {displayLabel}
                         </td>
                         {MONTH_NAMES.map((_, idx) => {
                           const month = idx + 1;
                           const cell = row.months[month];
                           const hasData = cell && cell.count > 0;
-                          const clickable = hasData && !isRTO;
-                          const drillStatus = row.status === 'SLA Breach' ? 'REJECTED' : row.status;
                           return (
                             <Fragment key={month}>
                               <td
-                                onClick={clickable ? () => openDrill(drillStatus, month, row.reasonCategory) : undefined}
-                                className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${clickable ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : hasData ? 'text-white' : 'text-white/30'}`}
+                                onClick={isClickable && hasData ? () => openDrill(row.status, month, row.reasonCategory) : undefined}
+                                className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${isClickable && hasData ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : hasData ? 'text-white' : 'text-white/30'}`}
                               >
                                 {hasData ? cell.count.toLocaleString() : '—'}
                               </td>
                               <td
-                                onClick={clickable ? () => openDrill(drillStatus, month, row.reasonCategory) : undefined}
-                                className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${clickable ? 'text-purple-200 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : hasData ? 'text-purple-200' : 'text-white/30'}`}
+                                onClick={isClickable && hasData ? () => openDrill(row.status, month, row.reasonCategory) : undefined}
+                                className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${isClickable && hasData ? 'text-purple-200 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : hasData ? 'text-purple-200' : 'text-white/30'}`}
                               >
                                 {hasData ? formatAmount(cell.amount) : '—'}
                               </td>
@@ -684,14 +687,14 @@ export default function OrderStatusDashboard() {
                           );
                         })}
                         <td
-                          onClick={!isRTO ? () => openDrill(row.status === 'SLA Breach' ? 'REJECTED' : row.status, null, row.reasonCategory) : undefined}
-                          className={`px-2 py-3 text-right tabular-nums font-bold bg-purple-500/10 transition-all duration-200 ${!isRTO ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative' : 'text-white'}`}
+                          onClick={isClickable ? () => openDrill(row.status, null, row.reasonCategory) : undefined}
+                          className={`px-2 py-3 text-right tabular-nums font-bold bg-purple-500/10 transition-all duration-200 ${isClickable ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative' : 'text-white'}`}
                         >
                           {row.total.count.toLocaleString()}
                         </td>
                         <td
-                          onClick={!isRTO ? () => openDrill(row.status === 'SLA Breach' ? 'REJECTED' : row.status, null, row.reasonCategory) : undefined}
-                          className={`px-2 py-3 text-right tabular-nums font-bold bg-purple-500/10 cursor-pointer border-r border-white/10 transition-all duration-200 ${!isRTO ? 'text-purple-100 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative' : 'text-purple-100 cursor-default'}`}
+                          onClick={isClickable ? () => openDrill(row.status, null, row.reasonCategory) : undefined}
+                          className={`px-2 py-3 text-right tabular-nums font-bold bg-purple-500/10 border-r border-white/10 transition-all duration-200 ${isClickable ? 'text-purple-100 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative' : 'text-purple-100'}`}
                         >
                           {formatAmount(row.total.amount)}
                         </td>
