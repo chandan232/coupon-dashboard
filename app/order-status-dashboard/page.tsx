@@ -17,19 +17,29 @@ interface DashboardData {
 
 interface OrderListRow {
   poNumber: string;
-  status: string;
-  amount: number;
-  buyerPhone: string | null;
-  buyerBusinessName: string | null;
+  MarkedpendingTime: string | null;
+  paymentDate: string | null;
+  paymentEvent: string | null;
   sellerPhone: string | null;
   sellerBusinessName: string | null;
-  buyerAddress: string;
-  buyerState: string | null;
-  markedPendingTime: string | null;
-  createdAt: string;
+  buyerPhone: string | null;
+  buyerBusinessName: string | null;
+  paidAmount: number | null;
+  poAmount: number | null;
+  CoupanApplied: number | null;
+  orderStatus: string;
+  discountBySeller: number;
+  discountByBadho: number;
+  appliedWalletAmount: number | null;
+  rejectReason: string | null;
+  paymentMode: string | null;
   awbNumber: string | null;
-  deliveryNetwork: string | null;
-  pushedStatus: string;
+  courierName: string | null;
+  DeliveryPaymentMethod: string | null;
+  deliveryStatus: string | null;
+  RefundIntiatedTime: string | null;
+  RefundCompletedTime: string | null;
+  RefundCompletedInMin: number | null;
 }
 
 interface RevenueGoal {
@@ -1462,41 +1472,57 @@ export default function OrderStatusDashboard() {
                       <tr className="border-b border-slate-200">
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">PO Number</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Amount</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">PO Amount</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Paid Amount</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Coupon Applied</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Seller Discount</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Badho Discount</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Wallet Amount</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Payment Mode</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Payment Date</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Payment Event</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">AWB Number</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Delivery Network</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Pushed Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Courier Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Delivery Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Delivery Payment</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Phone</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Business</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Seller Phone</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Seller Business</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer Address</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Buyer State</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Marked Pending</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Created At</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Refund Initiated</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Refund Completed</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600">Refund Time (min)</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600">Reject Reason</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(drillPaged?.rows || filteredDrillRows).map((r) => (
-                        <tr key={r.poNumber} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => openOrderDetail(r.poNumber)}>
+                        <tr key={r.poNumber} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
                           <td className="px-4 py-3 text-slate-900 tabular-nums font-medium">{r.poNumber}</td>
-                          <td className="px-4 py-3 text-slate-700">{r.status}</td>
-                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">₹{r.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.orderStatus}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.poAmount ? `₹${r.poAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.paidAmount ? `₹${r.paidAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.CoupanApplied ? `₹${r.CoupanApplied.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.discountBySeller ? `₹${r.discountBySeller.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.discountByBadho ? `₹${r.discountByBadho.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.appliedWalletAmount ? `₹${r.appliedWalletAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.paymentMode || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.paymentDate)}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.paymentEvent || '—'}</td>
                           <td className="px-4 py-3 text-slate-700 tabular-nums">{r.awbNumber || '—'}</td>
-                          <td className="px-4 py-3 text-slate-700">{r.deliveryNetwork || '—'}</td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${r.pushedStatus === 'Pushed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                              {r.pushedStatus}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-slate-700">{r.buyerPhone || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.courierName || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.deliveryStatus || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700">{r.DeliveryPaymentMethod || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700 tabular-nums">{r.buyerPhone || '—'}</td>
                           <td className="px-4 py-3 text-slate-700">{r.buyerBusinessName || '—'}</td>
-                          <td className="px-4 py-3 text-slate-700">{r.sellerPhone || '—'}</td>
+                          <td className="px-4 py-3 text-slate-700 tabular-nums">{r.sellerPhone || '—'}</td>
                           <td className="px-4 py-3 text-slate-700">{r.sellerBusinessName || '—'}</td>
-                          <td className="px-4 py-3 text-slate-600 max-w-xs truncate" title={r.buyerAddress}>{r.buyerAddress || '—'}</td>
-                          <td className="px-4 py-3 text-slate-700">{r.buyerState || '—'}</td>
-                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.markedPendingTime)}</td>
-                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.createdAt)}</td>
+                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.MarkedpendingTime)}</td>
+                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.RefundIntiatedTime)}</td>
+                          <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateTime(r.RefundCompletedTime)}</td>
+                          <td className="px-4 py-3 text-right text-slate-900 tabular-nums">{r.RefundCompletedInMin ? r.RefundCompletedInMin.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—'}</td>
+                          <td className="px-4 py-3 text-slate-700 max-w-xs truncate" title={r.rejectReason || ''}>{r.rejectReason || '—'}</td>
                         </tr>
                       ))}
                     </tbody>
