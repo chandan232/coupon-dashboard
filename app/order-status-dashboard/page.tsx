@@ -734,6 +734,113 @@ export default function OrderStatusDashboard() {
           </div>
         </div>
 
+        {/* Rejection Reason Breakdown by Month */}
+        <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-fuchsia-400/50 hover:shadow-[0_0_50px_rgba(217,70,239,0.25),inset_0_0_30px_rgba(168,85,247,0.12)]">
+          <div className="px-8 py-6 border-b border-white/10">
+            <h2 className="text-2xl font-bold text-white">Rejection Reason Breakdown</h2>
+            <p className="text-white/60 text-sm mt-1">Monthly breakdown of rejected orders by reason category — {currentYear}</p>
+          </div>
+          <div className="overflow-x-auto">
+            {rtoLoading ? (
+              <div className="py-12 text-center text-white/60">Loading rejection data...</div>
+            ) : !rtoData || !rtoData.data || rtoData.data.length === 0 ? (
+              <div className="py-12 text-center text-white/60">No rejection data available</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-gradient-to-r from-fuchsia-600/20 via-purple-600/20 to-indigo-600/20 border-b border-white/10">
+                  <tr>
+                    <td className="px-4 py-3 text-left text-white font-bold">Reason Category</td>
+                    {MONTH_NAMES.map((month, i) => (
+                      <td key={i} colSpan={2} className="px-2 py-3 text-center font-bold text-white border-r border-white/10">
+                        {month}
+                      </td>
+                    ))}
+                    <td colSpan={2} className="px-2 py-3 text-center font-bold text-white">
+                      Total
+                    </td>
+                  </tr>
+                  <tr className="border-b border-white/10">
+                    <td className="px-4 py-2"></td>
+                    {MONTH_NAMES.map((_, i) => (
+                      <Fragment key={i}>
+                        <td className="px-2 py-2 text-center text-[10px] font-semibold text-white/70 border-r border-white/10">Count</td>
+                        <td className="px-2 py-2 text-center text-[10px] font-semibold text-white/70">Amount</td>
+                      </Fragment>
+                    ))}
+                    <td className="px-2 py-2 text-center text-[10px] font-semibold text-white/70 border-r border-white/10">Count</td>
+                    <td className="px-2 py-2 text-center text-[10px] font-semibold text-white/70">Amount</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rtoData.data.map((row, rowIdx) => (
+                    <tr key={rowIdx} className={`border-b border-white/5 ${rowIdx % 2 === 0 ? 'bg-white/2' : ''}`}>
+                      <td className="px-4 py-3 text-left font-semibold text-white/90">
+                        {row.reasonCategory}
+                      </td>
+                      {MONTH_NAMES.map((_, monthIdx) => {
+                        const monthNum = monthIdx + 1;
+                        const monthCell = row.months[monthNum];
+                        const hasData = !!monthCell;
+                        return (
+                          <Fragment key={monthIdx}>
+                            <td
+                              onClick={() => hasData && openDrill('REJECTED', monthNum, row.reasonCategory)}
+                              className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${hasData ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                            >
+                              {hasData ? monthCell.count : '—'}
+                            </td>
+                            <td
+                              onClick={() => hasData && openDrill('REJECTED', monthNum, row.reasonCategory)}
+                              className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${hasData ? 'text-purple-100 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                            >
+                              {hasData ? formatAmount(monthCell.amount) : '—'}
+                            </td>
+                          </Fragment>
+                        );
+                      })}
+                      <td
+                        onClick={() => openDrill('REJECTED', null, row.reasonCategory)}
+                        className={`px-2 py-3 text-right tabular-nums font-bold text-white bg-purple-500/10 border-r border-white/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}
+                      >
+                        {row.total.count}
+                      </td>
+                      <td
+                        onClick={() => openDrill('REJECTED', null, row.reasonCategory)}
+                        className={`px-2 py-3 text-right tabular-nums font-bold text-purple-100 bg-purple-500/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative`}
+                      >
+                        {formatAmount(row.total.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-white/20 bg-purple-500/5">
+                    <td className="px-4 py-3 text-left font-bold text-white">Grand Total</td>
+                    {MONTH_NAMES.map((_, monthIdx) => {
+                      const monthNum = monthIdx + 1;
+                      const monthCell = rtoData.totals.byMonth[monthNum];
+                      return (
+                        <Fragment key={monthIdx}>
+                          <td className="px-2 py-3 text-right tabular-nums text-white bg-purple-500/30">
+                            {monthCell ? monthCell.count : '—'}
+                          </td>
+                          <td className="px-2 py-3 text-right tabular-nums text-purple-50 bg-purple-500/30 border-r border-white/10">
+                            {monthCell ? formatAmount(monthCell.amount) : '—'}
+                          </td>
+                        </Fragment>
+                      );
+                    })}
+                    <td className="px-2 py-3 text-right tabular-nums text-white bg-purple-500/30 border-r border-white/10">
+                      {rtoData.totals.grand.count}
+                    </td>
+                    <td className="px-2 py-3 text-right tabular-nums text-purple-50 bg-purple-500/30">
+                      {formatAmount(rtoData.totals.grand.amount)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
         {/* Monthly Trend & Growth — Status × Month, share-of-mix with pp delta */}
         <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-fuchsia-400/50 hover:shadow-[0_0_50px_rgba(217,70,239,0.25),inset_0_0_30px_rgba(168,85,247,0.12)]">
           <div className="px-8 py-6 border-b border-white/10">
