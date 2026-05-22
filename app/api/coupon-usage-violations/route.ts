@@ -1,6 +1,13 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { queryCached } from '@/lib/db';
 import { COUPON_MAX_USAGE_VIOLATIONS_SQL, BUYERS_AT_COUPON_LIMIT_SQL } from '@/lib/queries';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+// 180s cache — usage-violation aggregation walks the order × buyer ×
+// offer history. Refresh every 3 minutes is sufficient for a stats panel.
+const TTL_SECONDS = 180;
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,9 +17,10 @@ export async function GET(req: NextRequest) {
 
     let violationStatsSQL = COUPON_MAX_USAGE_VIOLATIONS_SQL;
     let violationDetailsSQL = BUYERS_AT_COUPON_LIMIT_SQL;
+    let params: unknown[] = [];
 
-    // Add date filter if provided
     if (startDate && endDate) {
+      // Indexed range comparison (no ::date cast) and isTest-only test-filter.
       violationStatsSQL = `
         WITH user_coupon_usage AS (
           SELECT
@@ -23,15 +31,15 @@ export async function GET(req: NextRequest) {
             COUNT(*) AS usage_count,
             CASE WHEN COUNT(*) >= COALESCE(o."maxUsagePerUser", 999999) THEN 'At Limit' ELSE 'Within Limit' END AS status
           FROM "promotions"."offerReservation" cor
-          JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-          JOIN "users"."buyer" b ON b."id" = po."buyerId"
-          JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-          WHERE o."isTest" = FALSE
-            AND b."isTest" = FALSE
-            AND po."isTest" = FALSE
-            AND po."isFalseOrder" = FALSE
-            AND cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
-            AND po."markedPendingTime"::date >= $1 AND po."markedPendingTime"::date <= $2
+          JOIN "purchaseOrder"."purchaseOrder" po
+               ON po."id" = cor."purchaseOrderId"
+              AND po."isTest" = FALSE
+              AND po."isFalseOrder" = FALSE
+              AND po."markedPendingTime" >= $1::timestamp
+              AND po."markedPendingTime" <  ($2::timestamp + INTERVAL '1 day')
+          JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
+          JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
+          WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
           GROUP BY b."id", b."businessName", o."code", o."maxUsagePerUser"
         )
         SELECT
@@ -55,42 +63,35 @@ export async function GET(req: NextRequest) {
           (COUNT(cor."id") - COALESCE(o."maxUsagePerUser", 999999))::text AS exceeded_by
         FROM "users"."buyer" b
         JOIN "promotions"."offerReservation" cor ON cor."buyerId" = b."id"
-        JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-        JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
+        JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
+        JOIN "purchaseOrder"."purchaseOrder" po
+             ON po."id" = cor."purchaseOrderId"
+            AND po."markedPendingTime" >= $1::timestamp
+            AND po."markedPendingTime" <  ($2::timestamp + INTERVAL '1 day')
         WHERE b."isTest" = FALSE
-          AND b."businessName" NOT ILIKE '%test%'
-          AND o."isTest" = FALSE
-          AND po."markedPendingTime"::date >= $1 AND po."markedPendingTime"::date <= $2
         GROUP BY b."id", b."businessName", b."phone", o."id", o."code", o."maxUsagePerUser"
         HAVING COUNT(cor."id") > COALESCE(o."maxUsagePerUser", 999999)
         ORDER BY exceeded_by DESC
         LIMIT 100;
       `;
 
-      const [violationStats, violationDetails] = await Promise.all([
-        query(violationStatsSQL, [startDate, endDate]),
-        query(violationDetailsSQL, [startDate, endDate]),
-      ]);
+      params = [startDate, endDate];
+    }
 
-      return NextResponse.json({
+    const [violationStats, violationDetails] = await Promise.all([
+      queryCached(violationStatsSQL, params, TTL_SECONDS),
+      queryCached(violationDetailsSQL, params, TTL_SECONDS),
+    ]);
+
+    return NextResponse.json(
+      {
         data: {
           stats: violationStats[0] ?? {},
           details: violationDetails ?? [],
         },
-      });
-    }
-
-    const [violationStats, violationDetails] = await Promise.all([
-      query(COUPON_MAX_USAGE_VIOLATIONS_SQL),
-      query(BUYERS_AT_COUPON_LIMIT_SQL),
-    ]);
-
-    return NextResponse.json({
-      data: {
-        stats: violationStats[0] ?? {},
-        details: violationDetails ?? [],
       },
-    });
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (err) {
     const msg = (err instanceof Error && err.message) ? err.message : String(err) || 'Unknown error';
     return NextResponse.json({ error: msg }, { status: 500 });

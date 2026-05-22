@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { query, invalidateCache } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
     );
 
     console.log('Update Result:', result);
+
+    // Drop cached dashboard aggregates so the toggle reflects immediately.
+    invalidateCache();
 
     return NextResponse.json({
       success: true,

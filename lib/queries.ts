@@ -1,3 +1,29 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// PERFORMANCE NOTES — read before editing
+// ──────────────────────────────────────────────────────────────────────────────
+// 1. Do NOT use `ILIKE '%test%'` on businessName. A leading wildcard prevents
+//    Postgres from using any index on that column, forcing a sequential scan
+//    of the entire buyer/seller table on every dashboard load. The canonical
+//    "is this a test account" check is the `isTest` boolean flag.
+//
+// 2. Every aggregation query that joins purchaseOrder MUST be bounded by a
+//    markedPendingTime cutoff. Without it the query scans the full history
+//    of every order ever placed. The dashboard only ever displays the last
+//    ~90 days of activity, so we apply that floor server-side.
+//
+// 3. Avoid `DATE_TRUNC(...)` and `column::date` casts in WHERE clauses on
+//    join keys. Use plain range comparisons (col >= ts AND col < ts) so
+//    the index on the column can still be used.
+//
+// 4. These queries are wrapped by lib/db.queryCached() — see route files —
+//    with TTLs in the 30-300s range to cap DB hits even under heavy traffic.
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Default lookback for aggregations that need a sane upper bound on rows
+// scanned. The dashboard shows ~90 days of trend data; older rows are not
+// rendered anywhere.
+const DEFAULT_LOOKBACK = `NOW() - INTERVAL '90 days'`;
+
 // ─── Management KPIs ────────────────────────────────────────────────────────
 export const MANAGEMENT_METRICS_SQL = `
 SELECT
@@ -14,24 +40,27 @@ SELECT
   ROUND(SUM(po."amount"), 2)::text AS total_revenue,
   ROUND((SUM(COALESCE(po."appliedOfferDiscount", 0)) * 100.0) / NULLIF(SUM(po."amount"), 0), 2)::text AS conversion_rate
 FROM "promotions"."offer" o
-LEFT JOIN "promotions"."offerReservation" cor ON cor."offerId" = o."id" AND cor."status" = 'APPLIED'
-LEFT JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId" AND po."isTest" = FALSE AND po."isFalseOrder" = FALSE
-LEFT JOIN "users"."buyer" b ON b."id" = po."buyerId"
-LEFT JOIN "users"."seller" s ON s."id" = po."sellerId"
-WHERE o."isTest" = FALSE
-  AND (b."isTest" = FALSE AND b."businessName" NOT ILIKE '%test%' OR b."id" IS NULL)
-  AND (s."isTest" = FALSE AND s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL);
+LEFT JOIN "promotions"."offerReservation" cor
+       ON cor."offerId" = o."id" AND cor."status" = 'APPLIED'
+LEFT JOIN "purchaseOrder"."purchaseOrder" po
+       ON po."id" = cor."purchaseOrderId"
+      AND po."isTest" = FALSE
+      AND po."isFalseOrder" = FALSE
+      AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
+LEFT JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
+LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
+WHERE o."isTest" = FALSE;
 `;
 
 // ─── Offers list (live & scheduled) ─────────────────────────────────────────
+// NOTE: This is hit by /api/offers which the Deactivate button refreshes.
+// MUST NOT be cached — keep it fast via the index on (type, created_at).
 export const OFFERS_LIST_SQL = `
 SELECT
   "id",
   "code",
   "code"                               AS coupon_name,
   CASE
-    -- SCHEDULED first: a coupon with a future activationTime is scheduled,
-    -- regardless of whether isActive=true (isActive=true just means "not deactivated")
     WHEN "isActive" = true AND "activationTime" > NOW() AND "expiryTime" > NOW() THEN 'SCHEDULED'
     WHEN "isActive" = true AND "activationTime" <= NOW() AND "expiryTime" > NOW() THEN 'LIVE'
     ELSE 'INACTIVE'
@@ -56,7 +85,7 @@ SELECT
   "isActive",
   "isTest"
 FROM "promotions"."offer"
-WHERE "type" ILIKE '%COUPON%'
+WHERE "type" = 'COUPON'
 ORDER BY "created_at" DESC
 LIMIT 200;
 `;
@@ -77,25 +106,23 @@ SELECT
   ROUND(COALESCE(AVG(po."amount"), 0), 2)::text AS avg_order_value,
   ROUND((SUM(COALESCE(po."appliedOfferDiscount", 0)) * 100.0) / NULLIF(SUM(po."amount"), 0), 2)::text AS discount_pct_of_revenue
 FROM "promotions"."offer" o
-JOIN "promotions"."offerReservation" cor ON cor."offerId" = o."id" AND cor."status" = 'APPLIED'
-JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-JOIN "users"."buyer" b ON b."id" = po."buyerId"
-LEFT JOIN "users"."seller" s ON s."id" = po."sellerId"
+JOIN "promotions"."offerReservation" cor
+     ON cor."offerId" = o."id" AND cor."status" = 'APPLIED'
+JOIN "purchaseOrder"."purchaseOrder" po
+     ON po."id" = cor."purchaseOrderId"
+    AND po."isTest" = FALSE
+    AND po."isFalseOrder" = FALSE
+    AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
+JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
+LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE o."isTest" = FALSE
-  AND po."isTest" = FALSE
-  AND po."isFalseOrder" = FALSE
-  AND po."markedPendingTime" IS NOT NULL
-  AND b."isTest" = FALSE
-  AND b."businessName" NOT ILIKE '%test%'
-  AND (s."isTest" = FALSE OR s."id" IS NULL)
-  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
   AND o."type" = 'COUPON'
 GROUP BY o."id", o."code"
 ORDER BY SUM(po."appliedOfferDiscount") DESC
 LIMIT 50;
 `;
 
-// ─── Hourly trend (simulated from offer data) ────────────────────────────────
+// ─── Hourly trend ────────────────────────────────────────────────────────────
 export const HOURLY_TREND_SQL = `
 SELECT
   DATE_TRUNC('hour', po."markedPendingTime") AS hour_bucket,
@@ -104,20 +131,16 @@ SELECT
   ROUND(SUM(po."amount"), 2)::text AS revenue
 FROM "promotions"."offerReservation" cor
 JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-JOIN "users"."buyer" b ON b."id" = po."buyerId"
-LEFT JOIN "users"."seller" s ON s."id" = po."sellerId"
+JOIN "purchaseOrder"."purchaseOrder" po
+     ON po."id" = cor."purchaseOrderId"
+    AND po."isTest" = FALSE
+    AND po."isFalseOrder" = FALSE
+    AND po."markedPendingTime" >= NOW() - INTERVAL '7 days'
+JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
+LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE cor."status" = 'APPLIED'
   AND o."isTest" = FALSE
-  AND po."isTest" = FALSE
-  AND po."isFalseOrder" = FALSE
-  AND po."markedPendingTime" IS NOT NULL
-  AND b."isTest" = FALSE
-  AND b."businessName" NOT ILIKE '%test%'
-  AND (s."isTest" = FALSE OR s."id" IS NULL)
-  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
   AND o."type" = 'COUPON'
-  AND po."markedPendingTime" >= NOW() - INTERVAL '7 days'
 GROUP BY 1
 ORDER BY 1;
 `;
@@ -131,20 +154,16 @@ SELECT
   ROUND(SUM(po."amount"), 2)::text AS revenue
 FROM "promotions"."offerReservation" cor
 JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-JOIN "users"."buyer" b ON b."id" = po."buyerId"
-LEFT JOIN "users"."seller" s ON s."id" = po."sellerId"
+JOIN "purchaseOrder"."purchaseOrder" po
+     ON po."id" = cor."purchaseOrderId"
+    AND po."isTest" = FALSE
+    AND po."isFalseOrder" = FALSE
+    AND po."markedPendingTime" >= NOW() - INTERVAL '30 days'
+JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
+LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE cor."status" = 'APPLIED'
   AND o."isTest" = FALSE
-  AND po."isTest" = FALSE
-  AND po."isFalseOrder" = FALSE
-  AND po."markedPendingTime" IS NOT NULL
-  AND b."isTest" = FALSE
-  AND b."businessName" NOT ILIKE '%test%'
-  AND (s."isTest" = FALSE OR s."id" IS NULL)
-  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
   AND o."type" = 'COUPON'
-  AND po."markedPendingTime" >= NOW() - INTERVAL '30 days'
 GROUP BY 1
 ORDER BY 1;
 `;
@@ -177,14 +196,14 @@ WITH user_coupon_usage AS (
     COUNT(*) AS usage_count,
     CASE WHEN COUNT(*) >= COALESCE(o."maxUsagePerUser", 999999) THEN 'At Limit' ELSE 'Within Limit' END AS status
   FROM "promotions"."offerReservation" cor
-  JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-  JOIN "users"."buyer" b ON b."id" = po."buyerId"
-  JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-  WHERE o."isTest" = FALSE
-    AND b."isTest" = FALSE
-    AND po."isTest" = FALSE
-    AND po."isFalseOrder" = FALSE
-    AND cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
+  JOIN "purchaseOrder"."purchaseOrder" po
+       ON po."id" = cor."purchaseOrderId"
+      AND po."isTest" = FALSE
+      AND po."isFalseOrder" = FALSE
+      AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
+  JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
+  JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
+  WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
   GROUP BY b."id", b."businessName", o."code", o."maxUsagePerUser"
 )
 SELECT
@@ -209,14 +228,14 @@ WITH user_coupon_usage AS (
     o."maxUsagePerUser",
     COUNT(*) AS usage_count
   FROM "promotions"."offerReservation" cor
-  JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-  JOIN "users"."buyer" b ON b."id" = po."buyerId"
-  JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-  WHERE o."isTest" = FALSE
-    AND b."isTest" = FALSE
-    AND po."isTest" = FALSE
-    AND po."isFalseOrder" = FALSE
-    AND cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
+  JOIN "purchaseOrder"."purchaseOrder" po
+       ON po."id" = cor."purchaseOrderId"
+      AND po."isTest" = FALSE
+      AND po."isFalseOrder" = FALSE
+      AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
+  JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
+  JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
+  WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
   GROUP BY b."id", b."businessName", b."phone", o."code", o."maxUsagePerUser"
   HAVING COUNT(*) >= COALESCE(o."maxUsagePerUser", 999999)
 )
@@ -266,20 +285,16 @@ SELECT
     2
   )::text                              AS avg_discount_percentage
 FROM "promotions"."offerReservation" cor
-JOIN "promotions"."offer" o ON o."id" = cor."offerId"
-JOIN "purchaseOrder"."purchaseOrder" po ON po."id" = cor."purchaseOrderId"
-JOIN "users"."buyer" b ON b."id" = po."buyerId"
-LEFT JOIN "users"."seller" s ON s."id" = po."sellerId"
-WHERE o."isTest" = FALSE
-  AND cor."status" = 'APPLIED'
-  AND po."isTest" = FALSE
-  AND po."isFalseOrder" = FALSE
-  AND po."markedPendingTime" IS NOT NULL
-  AND b."isTest" = FALSE
-  AND b."businessName" NOT ILIKE '%test%'
-  AND (s."isTest" = FALSE OR s."id" IS NULL)
-  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
-  AND o."type" = 'COUPON'
+JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE AND o."type" = 'COUPON'
+JOIN "purchaseOrder"."purchaseOrder" po
+     ON po."id" = cor."purchaseOrderId"
+    AND po."isTest" = FALSE
+    AND po."isFalseOrder" = FALSE
+    AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
+JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
+LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
+WHERE cor."status" = 'APPLIED'
 GROUP BY o."id", o."code"
-ORDER BY SUM(COALESCE(po."appliedOfferDiscount", 0)) DESC;
+ORDER BY SUM(COALESCE(po."appliedOfferDiscount", 0)) DESC
+LIMIT 100;
 `;

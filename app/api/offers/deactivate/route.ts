@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { query, invalidateCache } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Clear cached dashboard query results so the deactivated coupon
+    // immediately disappears from LIVE-tab aggregations and shows up
+    // wherever INACTIVE is counted.
+    invalidateCache();
 
     return NextResponse.json({ data: result[0] });
   } catch (err) {

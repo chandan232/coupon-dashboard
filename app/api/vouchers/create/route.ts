@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { query, invalidateCache } from '@/lib/db';
 
 /**
  * Look up the employee's name from "employeeBase"."employee" by email.
@@ -125,6 +125,9 @@ export async function POST(req: NextRequest) {
 
     console.log('Executing SQL query for voucher creation');
     const result = await query(sql, values);
+
+    // Drop cached dashboard aggregates so the new voucher is counted immediately.
+    invalidateCache();
 
     console.log('Voucher creation result:', result);
     return NextResponse.json({ data: result[0] });

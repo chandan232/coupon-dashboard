@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { query, invalidateCache } from '@/lib/db';
 
 /**
  * Look up the employee's name from "employeeBase"."employee" by email.
@@ -92,6 +92,9 @@ export async function POST(req: NextRequest) {
       isTest,
       createdByName,
     ]);
+
+    // Drop cached dashboard aggregates so the new coupon is counted immediately.
+    invalidateCache();
 
     return NextResponse.json({ data: result[0] });
   } catch (err) {

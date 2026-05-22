@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { query } from '@/lib/db';
+import { query, invalidateCache } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +27,10 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Drop any cached dashboard aggregates so the newly-active coupon
+    // shows up in LIVE counts immediately.
+    invalidateCache();
 
     return NextResponse.json({ data: result[0] });
   } catch (err) {
