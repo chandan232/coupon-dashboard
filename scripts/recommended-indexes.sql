@@ -51,15 +51,26 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_offer_code
   ON "promotions"."offer" ("code");
 
 -- ─── buyer / seller (test-account filtering) ───────────────────────────────
--- The isTest=FALSE filter on these tables is now done via the boolean
--- (not ILIKE '%test%' which prevented index use). A partial index keeps
--- only "real" rows for instant lookup by id.
+-- Queries do BOTH `isTest = FALSE` AND `businessName NOT ILIKE '%test%'`.
+-- isTest is the cheap check via this partial index on id, after which the
+-- result set is small enough that the businessName ILIKE filter doesn't
+-- dominate cost.
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_buyer_real
   ON "users"."buyer" ("id")
   WHERE "isTest" = FALSE;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_seller_real
   ON "users"."seller" ("id")
   WHERE "isTest" = FALSE;
+
+-- Optional but recommended: pg_trgm GIN index makes the
+-- `NOT ILIKE '%test%'` filter index-backed instead of forcing a per-row
+-- regex match. Trade-off: indexes take ~2-3× the size of a btree.
+-- Skip if disk pressure matters more than query speed.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_buyer_businessname_trgm
+  ON "users"."buyer" USING gin ("businessName" gin_trgm_ops);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_seller_businessname_trgm
+  ON "users"."seller" USING gin ("businessName" gin_trgm_ops);
 
 -- ─── employee (login lookup) ───────────────────────────────────────────────
 -- Email-only login does a LOWER(email) match — needs a functional index.

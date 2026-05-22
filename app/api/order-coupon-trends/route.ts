@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
         AND po."deliveryType" = 'INTERCITY'
         AND po."deliveryNetwork" = 'THIRD_PARTY'
         AND po."markedPendingTime" IS NOT NULL
+        AND b."businessName" NOT ILIKE '%test%'
+        AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
     `;
     const params: unknown[] = [];
 

@@ -1,22 +1,22 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // PERFORMANCE NOTES — read before editing
 // ──────────────────────────────────────────────────────────────────────────────
-// 1. Do NOT use `ILIKE '%test%'` on businessName. A leading wildcard prevents
-//    Postgres from using any index on that column, forcing a sequential scan
-//    of the entire buyer/seller table on every dashboard load. The canonical
-//    "is this a test account" check is the `isTest` boolean flag.
-//
-// 2. Every aggregation query that joins purchaseOrder MUST be bounded by a
+// 1. Every aggregation query that joins purchaseOrder MUST be bounded by a
 //    markedPendingTime cutoff. Without it the query scans the full history
 //    of every order ever placed. The dashboard only ever displays the last
 //    ~90 days of activity, so we apply that floor server-side.
 //
-// 3. Avoid `DATE_TRUNC(...)` and `column::date` casts in WHERE clauses on
+// 2. Avoid `DATE_TRUNC(...)` and `column::date` casts in WHERE clauses on
 //    join keys. Use plain range comparisons (col >= ts AND col < ts) so
 //    the index on the column can still be used.
 //
-// 4. These queries are wrapped by lib/db.queryCached() — see route files —
+// 3. These queries are wrapped by lib/db.queryCached() — see route files —
 //    with TTLs in the 30-300s range to cap DB hits even under heavy traffic.
+//
+// 4. `ILIKE '%test%'` filters on businessName are kept by product request.
+//    They block index use on the buyer/seller name columns, so the index
+//    recommendations in scripts/recommended-indexes.sql lean on the
+//    `isTest=FALSE` partial indexes to keep these joins fast.
 // ──────────────────────────────────────────────────────────────────────────────
 
 // Default lookback for aggregations that need a sane upper bound on rows
@@ -49,7 +49,9 @@ LEFT JOIN "purchaseOrder"."purchaseOrder" po
       AND po."markedPendingTime" >= ${DEFAULT_LOOKBACK}
 LEFT JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
 LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
-WHERE o."isTest" = FALSE;
+WHERE o."isTest" = FALSE
+  AND (b."businessName" NOT ILIKE '%test%' OR b."id" IS NULL)
+  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL);
 `;
 
 // ─── Offers list (live & scheduled) ─────────────────────────────────────────
@@ -117,6 +119,8 @@ JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
 LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE o."isTest" = FALSE
   AND o."type" = 'COUPON'
+  AND b."businessName" NOT ILIKE '%test%'
+  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
 GROUP BY o."id", o."code"
 ORDER BY SUM(po."appliedOfferDiscount") DESC
 LIMIT 50;
@@ -141,6 +145,8 @@ LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE cor."status" = 'APPLIED'
   AND o."isTest" = FALSE
   AND o."type" = 'COUPON'
+  AND b."businessName" NOT ILIKE '%test%'
+  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
 GROUP BY 1
 ORDER BY 1;
 `;
@@ -164,6 +170,8 @@ LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE cor."status" = 'APPLIED'
   AND o."isTest" = FALSE
   AND o."type" = 'COUPON'
+  AND b."businessName" NOT ILIKE '%test%'
+  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
 GROUP BY 1
 ORDER BY 1;
 `;
@@ -204,6 +212,7 @@ WITH user_coupon_usage AS (
   JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
   JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
   WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
+    AND b."businessName" NOT ILIKE '%test%'
   GROUP BY b."id", b."businessName", o."code", o."maxUsagePerUser"
 )
 SELECT
@@ -236,6 +245,7 @@ WITH user_coupon_usage AS (
   JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
   JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
   WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
+    AND b."businessName" NOT ILIKE '%test%'
   GROUP BY b."id", b."businessName", b."phone", o."code", o."maxUsagePerUser"
   HAVING COUNT(*) >= COALESCE(o."maxUsagePerUser", 999999)
 )
@@ -294,6 +304,8 @@ JOIN "purchaseOrder"."purchaseOrder" po
 JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
 LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
 WHERE cor."status" = 'APPLIED'
+  AND b."businessName" NOT ILIKE '%test%'
+  AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
 GROUP BY o."id", o."code"
 ORDER BY SUM(COALESCE(po."appliedOfferDiscount", 0)) DESC
 LIMIT 100;

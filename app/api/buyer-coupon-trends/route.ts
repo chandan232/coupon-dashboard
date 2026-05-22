@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         AND po."isTest" = FALSE
         AND po."isFalseOrder" = FALSE
         AND po."markedPendingTime" IS NOT NULL
+        AND b."businessName" NOT ILIKE '%test%'
     `;
     const params: unknown[] = [];
 

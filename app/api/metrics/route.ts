@@ -48,7 +48,9 @@ export async function GET(req: NextRequest) {
               AND po."markedPendingTime" <  ($2::timestamp + INTERVAL '1 day')
         LEFT JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
         LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
-        WHERE o."isTest" = FALSE;
+        WHERE o."isTest" = FALSE
+          AND (b."businessName" NOT ILIKE '%test%' OR b."id" IS NULL)
+          AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL);
       `;
       params.push(startDate, endDate);
     }

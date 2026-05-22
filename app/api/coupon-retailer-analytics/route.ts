@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
           ${dateFilter}
       JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
       WHERE a."status" = 'APPLIED'
+        AND s."businessName" NOT ILIKE '%test%'
       GROUP BY s."id", s."businessName", s."phone"
       ORDER BY applied_coupons_count DESC
       LIMIT 50;
@@ -66,6 +67,7 @@ export async function GET(req: NextRequest) {
         JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
         JOIN "promotions"."offer" o ON o."id" = a."offerId"
         WHERE a."status" = 'APPLIED'
+          AND b."businessName" NOT ILIKE '%test%'
       ),
       all_orders AS (
         SELECT COUNT(DISTINCT po."id") AS total_orders
@@ -104,6 +106,7 @@ export async function GET(req: NextRequest) {
           ${dateFilter}
       JOIN "users"."buyer" b ON b."id" = po."buyerId" AND b."isTest" = FALSE
       WHERE a."status" = 'APPLIED'
+        AND b."businessName" NOT ILIKE '%test%'
       GROUP BY b."id", b."businessName", b."phone"
       ORDER BY coupons_applied_count DESC
       LIMIT 20;

@@ -53,6 +53,8 @@ export async function GET(req: NextRequest) {
         LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
         WHERE o."isTest" = FALSE
           AND o."type" = 'COUPON'
+          AND b."businessName" NOT ILIKE '%test%'
+          AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
         GROUP BY o."id", o."code"
         ORDER BY SUM(po."appliedOfferDiscount") DESC
         LIMIT 50;

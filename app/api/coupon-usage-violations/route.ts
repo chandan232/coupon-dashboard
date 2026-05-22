@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
           JOIN "users"."buyer"  b ON b."id" = po."buyerId" AND b."isTest" = FALSE
           JOIN "promotions"."offer" o ON o."id" = cor."offerId" AND o."isTest" = FALSE
           WHERE cor."status" IN ('APPLIED', 'RESERVED', 'CANCELLED')
+            AND b."businessName" NOT ILIKE '%test%'
           GROUP BY b."id", b."businessName", o."code", o."maxUsagePerUser"
         )
         SELECT
@@ -69,6 +70,7 @@ export async function GET(req: NextRequest) {
             AND po."markedPendingTime" >= $1::timestamp
             AND po."markedPendingTime" <  ($2::timestamp + INTERVAL '1 day')
         WHERE b."isTest" = FALSE
+          AND b."businessName" NOT ILIKE '%test%'
         GROUP BY b."id", b."businessName", b."phone", o."id", o."code", o."maxUsagePerUser"
         HAVING COUNT(cor."id") > COALESCE(o."maxUsagePerUser", 999999)
         ORDER BY exceeded_by DESC

@@ -31,6 +31,8 @@ function trendSql(granularity: 'hourly' | 'daily') {
     JOIN "users"."buyer"  b ON b."id" = po."buyerId"  AND b."isTest" = FALSE
     LEFT JOIN "users"."seller" s ON s."id" = po."sellerId" AND s."isTest" = FALSE
     WHERE cor."status" = 'APPLIED'
+      AND b."businessName" NOT ILIKE '%test%'
+      AND (s."businessName" NOT ILIKE '%test%' OR s."id" IS NULL)
     GROUP BY 1
     ORDER BY 1;
   `;

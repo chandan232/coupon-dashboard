@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
         LEFT JOIN "users"."seller" d ON d."id" = b."sellerId" AND d."isTest" = FALSE
         WHERE a."status" != 'APPLIED'
           AND b."amount" > 0
+          AND c."businessName" NOT ILIKE '%test%'
+          AND (d."businessName" NOT ILIKE '%test%' OR d."id" IS NULL)
         GROUP BY 1
         ORDER BY count DESC;
       `;
