@@ -174,6 +174,8 @@ export default function OrderStatusDashboard() {
   const [drillStatus, setDrillStatus] = useState<string | null>(null);
   const [drillMonth, setDrillMonth] = useState<number | null>(null);
   const [drillReasonCategory, setDrillReasonCategory] = useState<string | null>(null);
+  const [drillSellerId, setDrillSellerId] = useState<string | null>(null);
+  const [drillSellerName, setDrillSellerName] = useState<string | null>(null);
   const [drillRows, setDrillRows] = useState<OrderListRow[] | null>(null);
   const [drillLoading, setDrillLoading] = useState(false);
   const [drillError, setDrillError] = useState<string | null>(null);
@@ -200,7 +202,7 @@ export default function OrderStatusDashboard() {
   const fetchMonthly = async () => {
     try {
       setMonthlyLoading(true);
-      const response = await fetch(`/api/order-monthly-status?year=${currentYear}`);
+      const response = await fetch(`/api/order-monthly-status?year=${currentYear}`, { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch monthly data');
       const result: MonthlyStatusData = await response.json();
       setMonthlyData(result);
@@ -273,10 +275,17 @@ export default function OrderStatusDashboard() {
   useEffect(() => { setSellerTablePage(1); }, [sellerSearch]);
   useEffect(() => { setSellerDrillPage(1); }, [sellerDrillId, sellerDrillStartDate, sellerDrillEndDate, sellerDrillStatus, sellerDrillPo]);
 
-  const openDrill = async (status: string, month: number | null, reasonCategory?: string | null) => {
+  const openDrill = async (
+    status: string,
+    month: number | null,
+    reasonCategory?: string | null,
+    seller?: { id: string; name: string | null } | null,
+  ) => {
     setDrillStatus(status);
     setDrillMonth(month);
     setDrillReasonCategory(reasonCategory || null);
+    setDrillSellerId(seller?.id ?? null);
+    setDrillSellerName(seller?.name ?? null);
     setDrillRows(null);
     setDrillError(null);
     setDrillSearch('');
@@ -286,6 +295,7 @@ export default function OrderStatusDashboard() {
       const params = new URLSearchParams({ status, year: String(currentYear) });
       if (month !== null) params.append('month', String(month));
       if (reasonCategory) params.append('reasonCategory', reasonCategory);
+      if (seller?.id) params.append('sellerId', seller.id);
       const res = await fetch(`/api/order-list?${params.toString()}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to fetch');
@@ -301,6 +311,8 @@ export default function OrderStatusDashboard() {
     setDrillStatus(null);
     setDrillMonth(null);
     setDrillReasonCategory(null);
+    setDrillSellerId(null);
+    setDrillSellerName(null);
     setDrillRows(null);
     setDrillError(null);
     setDrillSearch('');
@@ -511,6 +523,8 @@ export default function OrderStatusDashboard() {
       {/* Animated background orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
+      {/* Breathing violet corner glow (top-right) */}
+      <div className="pointer-events-none absolute -top-32 -right-32 w-[32rem] h-[32rem] bg-violet-500 rounded-full mix-blend-screen filter blur-3xl breathe-violet"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Tabs */}
@@ -1046,7 +1060,7 @@ export default function OrderStatusDashboard() {
                 className="w-full px-4 py-2 text-sm bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
               />
             </div>
-            <div className="overflow-x-auto">
+            <div>
               {sellerLoading ? (
                 <div className="px-8 py-12 text-center">
                   <div className="flex flex-col items-center gap-3">
@@ -1074,30 +1088,31 @@ export default function OrderStatusDashboard() {
                 const paged = filtered.slice(startIdx, endIdx);
                 return (
                   <Fragment>
+                  <div className="overflow-auto max-h-[70vh]">
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-white/5 border-b border-white/10">
-                        <th rowSpan={2} className="px-4 py-3 text-left text-xs font-semibold text-purple-200 sticky left-0 bg-slate-900/80 backdrop-blur z-10 border-r border-white/10 min-w-[260px]">
+                    <thead className="sticky top-0 z-20">
+                      <tr className="bg-slate-900 border-b border-white/10">
+                        <th rowSpan={2} className="px-4 py-3 text-left text-xs font-semibold text-purple-200 sticky left-0 top-0 bg-slate-900 z-30 border-r border-white/10 min-w-[260px]">
                           Seller
                         </th>
                         {sellerData.statuses.map((st) => (
-                          <th key={st} colSpan={2} className="px-2 py-2 text-center text-xs font-semibold text-purple-200 border-r border-white/10">
+                          <th key={st} colSpan={2} className="px-2 py-2 text-center text-xs font-semibold text-purple-200 border-r border-white/10 bg-slate-900">
                             {st}
                           </th>
                         ))}
-                        <th colSpan={2} className="px-2 py-2 text-center text-xs font-bold text-purple-100 bg-purple-500/20">
+                        <th colSpan={2} className="px-2 py-2 text-center text-xs font-bold text-purple-100 bg-purple-600">
                           Total
                         </th>
                       </tr>
-                      <tr className="bg-white/5 border-b border-white/10">
+                      <tr className="bg-slate-900 border-b border-white/10">
                         {sellerData.statuses.map((st) => (
                           <Fragment key={st}>
-                            <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-300">Count</th>
-                            <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-300 border-r border-white/10">Amount</th>
+                            <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-300 bg-slate-900">Count</th>
+                            <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-300 border-r border-white/10 bg-slate-900">Amount</th>
                           </Fragment>
                         ))}
-                        <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-100 bg-purple-500/20">Count</th>
-                        <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-100 bg-purple-500/20">Amount</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-100 bg-purple-600">Count</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-medium text-purple-100 bg-purple-600">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1107,34 +1122,50 @@ export default function OrderStatusDashboard() {
                           onClick={() => openSellerDrill(s)}
                           className="border-b border-white/5 hover:bg-fuchsia-500/15 cursor-pointer transition-colors group"
                         >
-                          <td className="px-4 py-3 sticky left-0 bg-slate-900/80 backdrop-blur z-10 border-r border-white/10 group-hover:bg-slate-800/90 text-white text-sm">
+                          <td className="px-4 py-3 sticky left-0 bg-slate-900 z-10 border-r border-white/10 group-hover:bg-slate-800 text-white text-sm">
                             <div className="font-medium leading-tight group-hover:text-fuchsia-200 transition-colors">{s.sellerBusinessName || '—'}</div>
                             <div className="text-purple-300/70 text-xs tabular-nums leading-tight mt-0.5">{s.sellerPhone || '—'}</div>
                           </td>
                           {sellerData.statuses.map((st) => {
                             const cell = s.statuses[st];
                             const hasData = cell && cell.count > 0;
+                            const drillSeller = (e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              openDrill(st, null, null, { id: s.sellerId, name: s.sellerBusinessName });
+                            };
                             return (
                               <Fragment key={st}>
-                                <td className={`px-2 py-3 text-right tabular-nums ${hasData ? 'text-white' : 'text-white/30'}`}>
+                                <td
+                                  onClick={hasData ? drillSeller : undefined}
+                                  className={`px-2 py-3 text-right tabular-nums transition-all duration-200 ${hasData ? 'text-white cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                                >
                                   {hasData ? cell.count.toLocaleString() : '—'}
                                 </td>
-                                <td className={`px-2 py-3 text-right tabular-nums border-r border-white/10 ${hasData ? 'text-purple-200' : 'text-white/30'}`}>
+                                <td
+                                  onClick={hasData ? drillSeller : undefined}
+                                  className={`px-2 py-3 text-right tabular-nums border-r border-white/10 transition-all duration-200 ${hasData ? 'text-purple-200 cursor-pointer hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:font-bold hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.6),0_0_18px_rgba(168,85,247,0.55)] hover:scale-110 transform-gpu relative' : 'text-white/30'}`}
+                                >
                                   {hasData ? formatAmount(cell.amount) : '—'}
                                 </td>
                               </Fragment>
                             );
                           })}
-                          <td className="px-2 py-3 text-right tabular-nums font-bold text-white bg-purple-500/10">
+                          <td
+                            onClick={(e) => { e.stopPropagation(); openDrill('all', null, null, { id: s.sellerId, name: s.sellerBusinessName }); }}
+                            className="px-2 py-3 text-right tabular-nums font-bold text-white bg-purple-500/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative"
+                          >
                             {s.total.count.toLocaleString()}
                           </td>
-                          <td className="px-2 py-3 text-right tabular-nums font-bold text-purple-100 bg-purple-500/10 border-r border-white/10">
+                          <td
+                            onClick={(e) => { e.stopPropagation(); openDrill('all', null, null, { id: s.sellerId, name: s.sellerBusinessName }); }}
+                            className="px-2 py-3 text-right tabular-nums font-bold text-purple-100 bg-purple-500/10 border-r border-white/10 cursor-pointer transition-all duration-200 hover:bg-gradient-to-br hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:text-white hover:shadow-[inset_0_0_20px_rgba(217,70,239,0.7),0_0_22px_rgba(168,85,247,0.6)] hover:scale-110 transform-gpu relative"
+                          >
                             {formatAmount(s.total.amount)}
                           </td>
                         </tr>
                       ))}
                       <tr className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-t-2 border-purple-400/40 font-bold">
-                        <td className="px-4 py-3 sticky left-0 bg-slate-900/95 backdrop-blur z-10 border-r border-white/10 text-white">
+                        <td className="px-4 py-3 sticky left-0 bg-slate-900 z-10 border-r border-white/10 text-white">
                           <div>Total</div>
                           <div className="text-white/60 text-xs font-normal">{filtered.length} seller{filtered.length === 1 ? '' : 's'}</div>
                         </td>
@@ -1161,6 +1192,7 @@ export default function OrderStatusDashboard() {
                       </tr>
                     </tbody>
                   </table>
+                  </div>
                   <div className="px-8 py-4 border-t border-white/10 bg-white/5 flex items-center justify-between text-sm text-purple-200 flex-wrap gap-3">
                     <div>
                       Showing <span className="font-semibold text-white">{startIdx + 1}</span>–<span className="font-semibold text-white">{endIdx}</span> of <span className="font-semibold text-white">{filtered.length}</span>
@@ -1583,7 +1615,7 @@ export default function OrderStatusDashboard() {
               <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                 <div>
                   <h3 className="text-xl font-semibold text-slate-900">
-                    {drillStatus}{drillReasonCategory ? ` — ${drillReasonCategory}` : ''} — {drillMonth ? `${MONTH_NAMES[drillMonth - 1]} ${currentYear}` : `${currentYear} (all months)`}
+                    {drillSellerName ? `${drillSellerName} — ` : ''}{drillStatus === 'all' ? 'All statuses' : drillStatus}{drillReasonCategory ? ` — ${drillReasonCategory}` : ''} — {drillMonth ? `${MONTH_NAMES[drillMonth - 1]} ${currentYear}` : `${currentYear} (all months)`}
                   </h3>
                   <p className="text-slate-500 text-sm mt-1">
                     {drillLoading
@@ -1897,6 +1929,19 @@ export default function OrderStatusDashboard() {
         }
         .animation-delay-2000 {
           animation-delay: 2s;
+        }
+        @keyframes breathe-violet {
+          0%, 100% {
+            opacity: 0.18;
+            transform: scale(0.92);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.08);
+          }
+        }
+        .breathe-violet {
+          animation: breathe-violet 6s ease-in-out infinite;
         }
       `}</style>
     </div>

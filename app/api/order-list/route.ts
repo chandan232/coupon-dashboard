@@ -36,16 +36,30 @@ export async function GET(req: NextRequest) {
   const year = parseInt(searchParams.get('year') || String(currentYear));
   const monthParam = searchParams.get('month');
   const status = searchParams.get('status');
+  const sellerId = searchParams.get('sellerId');
   const reasonCategory = searchParams.get('reasonCategory');
 
-  if (!status) {
-    return NextResponse.json({ error: 'status parameter required' }, { status: 400 });
+  if (!status && !sellerId) {
+    return NextResponse.json({ error: 'status or sellerId parameter required' }, { status: 400 });
   }
 
   try {
-    const params: (string | number)[] = [status, year];
+    // $1 is always the year; status / sellerId / month are appended dynamically
+    const params: (string | number)[] = [year];
+    let statusFilter = '';
+    let sellerFilter = '';
     let monthFilter = '';
     let reasonFilter = '';
+
+    if (status && status !== 'all') {
+      params.push(status);
+      statusFilter = ` AND po."status" = $${params.length}`;
+    }
+
+    if (sellerId) {
+      params.push(sellerId);
+      sellerFilter = ` AND po."sellerId"::text = $${params.length}`;
+    }
 
     if (monthParam) {
       const month = parseInt(monthParam);
@@ -100,7 +114,13 @@ export async function GET(req: NextRequest) {
       FROM "purchaseOrder"."purchaseOrder" po
       JOIN "users"."buyer" AS b ON b."id" = po."buyerId"
       JOIN "users"."seller" s ON po."sellerId" = s."id"
-      LEFT JOIN "deliveries"."intercityDelivery" AS dv ON dv."purchaseOrderId" = po."id"
+      LEFT JOIN LATERAL (
+        SELECT idv."trackingInfo", idv."metaDetails", idv."status"
+        FROM "deliveries"."intercityDelivery" idv
+        WHERE idv."purchaseOrderId" = po."id"
+        ORDER BY idv."created_at" DESC
+        LIMIT 1
+      ) AS dv ON TRUE
       LEFT JOIN "payments"."paymentRefundRecord" AS pf ON pf."purchaseOrderId" = po."id" AND pf."status" = 'COMPLETED'
       LEFT JOIN "purchaseOrder"."purchaseOrderPayment" AS pop ON pop."purchaseOrderId" = po."id" AND pop."status" = 'COMPLETED' AND pop."event" IN ('FULL_ADVANCE', 'PARTIAL_ADVANCE')
       WHERE
@@ -114,8 +134,9 @@ export async function GET(req: NextRequest) {
         AND po."deliveryNetwork" = 'THIRD_PARTY'
         AND po."deliveryType" = 'INTERCITY'
         AND po."isFalseOrder" = FALSE
-        AND EXTRACT(YEAR FROM po."created_at") = $2
-        AND po."status" = $1
+        AND EXTRACT(YEAR FROM po."created_at") = $1
+        ${statusFilter}
+        ${sellerFilter}
         ${monthFilter}
         ${reasonFilter}
       ORDER BY "MarkedpendingTime" DESC NULLS LAST
