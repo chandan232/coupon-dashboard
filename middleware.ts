@@ -1,31 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-// Note: We don't verify JWT in middleware because Next.js middleware runs in Edge Runtime
-// where the 'jsonwebtoken' library doesn't work. Instead, we rely on:
-// 1. Client-side auth check in app/page.tsx (redirects to /login if no token)
-// 2. The /api/auth/email-login endpoint validates credentials against the database
-// API routes are accessible to keep the dashboard working; the login page is the gate.
-
-export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Allow login page and all API routes
-  // The client-side dashboard already gates access by checking localStorage token
-  if (pathname === '/login' || pathname.startsWith('/api/')) {
-    return NextResponse.next();
-  }
-
-  return NextResponse.next();
-}
+// clerkMiddleware only attaches the Clerk session to the request context —
+// it does NOT protect any route on its own. The page-level gate (localStorage
+// token + AuthGuard revalidation) and the internal Bearer-JWT check on API
+// routes still do the enforcing. Clerk is used solely to prove "who is this
+// Google user" during login; /api/auth/google-login reads that session via
+// auth() and exchanges it for the internal JWT.
+export default clerkMiddleware();
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
